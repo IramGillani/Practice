@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { CheckCircle, Circle, FilePen, Trash2 } from "lucide-react";
-import type { Task } from "../App";
+import { type Task } from "../types";
 
 export const TaskItem = memo(
   ({

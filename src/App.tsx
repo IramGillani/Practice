@@ -2,16 +2,9 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Plus, ArrowUpDown, FilePenLine } from "lucide-react";
 import { TaskItem } from "./components/TaskItem";
 import { DeleteModal } from "./components/DeleteModal";
-
-export interface Task {
-  id: string;
-  text: string;
-  completed: boolean;
-  createdAt: Date;
-}
-
-type FilterStatus = "all" | "completed" | "active";
-type SortOrder = "newest" | "oldest";
+import type { Task, FilterStatus, SortOrder } from "./types";
+import { processedTasks } from "./utils";
+import TaskInput from "./components/TaskInput";
 
 const TodoApp = () => {
   const [tasks, setTasks] = useState(() => {
@@ -43,7 +36,6 @@ const TodoApp = () => {
   const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-
     if (updating && editingId) {
       setTasks(
         tasks.map((t: Task) =>
@@ -80,20 +72,10 @@ const TodoApp = () => {
     setInput(task.text);
   }, []);
 
-  const processedTasks = useMemo(() => {
-    let result = [...tasks];
-
-    if (filter === "completed") result = result.filter((t) => t.completed);
-    if (filter === "active") result = result.filter((t) => !t.completed);
-
-    result.sort((a, b) => {
-      const timeA = a.createdAt.getTime();
-      const timeB = b.createdAt.getTime();
-      return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
-    });
-
-    return result;
-  }, [tasks, filter, sortOrder]);
+  const filteredTasks = useMemo(
+    (): Task[] => processedTasks(tasks, filter, sortOrder),
+    [tasks, filter, sortOrder],
+  );
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg border border-gray-100">
@@ -129,7 +111,7 @@ const TodoApp = () => {
         </button>
       </div>
       <ul className="space-y-3">
-        {processedTasks.map((task) => (
+        {filteredTasks.map((task) => (
           <TaskItem
             key={task.id}
             task={task}
@@ -140,12 +122,14 @@ const TodoApp = () => {
         ))}
       </ul>
 
-      {processedTasks.length === 0 && (
+      {filteredTasks.length === 0 && (
         <p className="text-center text-gray-400 mt-10">No tasks found.</p>
       )}
 
-      <form onSubmit={handleSubmit} className="flex gap-2 mt-6">
+      {/* React hook form + Zod */}
+      {/* <form onSubmit={handleSubmit} className="flex gap-2 mt-6">
         <input
+          name="task"
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -158,11 +142,15 @@ const TodoApp = () => {
         >
           {updating ? <FilePenLine size={20} /> : <Plus size={20} />}
         </button>
-      </form>
+      </form> */}
+      <TaskInput />
       {taskToDelete && (
         <DeleteModal
           taskText={tasks[taskToDelete]?.text}
-          onConfirm={() => deleteTask(taskToDelete)}
+          onConfirm={() => {
+            deleteTask(taskToDelete);
+            setTaskToDelete(null);
+          }}
           onCancel={() => setTaskToDelete(null)}
         />
       )}
