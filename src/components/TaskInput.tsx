@@ -1,74 +1,95 @@
+"use client";
+
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Plus, FilePenLine } from "lucide-react";
-import { useTasks } from "../context/TodoProvider";
-import { useEffect } from "react";
+
+// Shadcn UI Imports
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+
+import { Input } from "@/components/ui/input";
+
+import { useTasks } from "@/context/TodoProvider";
 
 const TaskInputSchema = yup
   .object({
-    task: yup.string().required("Please! Enter a task"),
+    task: yup.string().required("Please enter a task"),
   })
   .required();
 
 type FormData = yup.InferType<typeof TaskInputSchema>;
 
 export default function TaskInput() {
-  const { addTask, updating, input } = useTasks(); // input here is the text of the task being edited
+  const { addTask, updating, input: editingText } = useTasks();
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<FormData>({
+  const form = useForm<FormData>({
     resolver: yupResolver(TaskInputSchema),
+    defaultValues: {
+      task: "",
+    },
   });
 
   useEffect(() => {
     if (updating) {
-      setValue("task", input);
+      form.setValue("task", editingText);
     }
-  }, [updating, input, setValue]);
+  }, [updating, editingText, form]);
 
   const onSubmit = (data: FormData) => {
     addTask(data.task);
-    reset(); // Clear the form after submission
+    form.reset({ task: "" });
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="flex gap-2 mt-6 items-start"
-    >
-      <div className="flex flex-col flex-1">
-        <input
-          {...register("task")}
-          placeholder={updating ? "Update task..." : "What needs to be done?"}
-          className={`px-4 py-2 border rounded-lg outline-none transition-all ${
-            errors.task
-              ? "border-red-500 focus:ring-1 focus:ring-red-500"
-              : "border-gray-300 focus:ring-2 focus:ring-blue-500"
-          }`}
-        />
-        {errors.task && (
-          <span className="text-red-500 text-xs mt-1 ml-1">
-            {errors.task.message}
-          </span>
-        )}
-      </div>
-
-      <button
-        type="submit"
-        className={`p-2 rounded-lg transition-colors h-10.5 flex items-center justify-center ${
-          updating
-            ? "bg-green-600 hover:bg-green-700"
-            : "bg-blue-600 hover:bg-blue-700"
-        } text-white`}
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex items-start gap-2 mt-6 w-full"
       >
-        {updating ? <FilePenLine size={20} /> : <Plus size={20} />}
-      </button>
-    </form>
+        <FormField
+          control={form.control}
+          name="task"
+          render={({ field }) => (
+            <FormItem className="flex-1">
+              <FormControl>
+                <Input
+                  placeholder={
+                    updating ? "Update task..." : "What needs to be done?"
+                  }
+                  className="h-10"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+
+        <Button
+          type="submit"
+          size="icon"
+          className={`shrink-0 h-10 w-10 transition-colors ${
+            updating
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
+        >
+          {updating ? (
+            <FilePenLine className="h-5 w-5" />
+          ) : (
+            <Plus className="h-5 w-5" />
+          )}
+        </Button>
+      </form>
+    </Form>
   );
 }
