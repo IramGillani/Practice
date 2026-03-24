@@ -1,10 +1,11 @@
-import { useState } from "react"; 
+import { useState } from "react";
 import { ArrowUpDown } from "lucide-react";
 import { TaskItem } from "./components/TaskItem";
 import { DeleteModal } from "./components/DeleteModal";
 import TaskInput from "./components/TaskInput";
 import { useTasks } from "./context/TodoProvider";
 import type { FilterStatus } from "./types";
+import { Button } from "./components/ui/button";
 
 const TodoApp = () => {
   const {
@@ -19,10 +20,8 @@ const TodoApp = () => {
     startEditing,
   } = useTasks();
 
-
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
- 
   const taskTextToDelete = tasks.find((t) => t.id === taskToDelete)?.text;
 
   return (
@@ -48,7 +47,8 @@ const TodoApp = () => {
           ))}
         </div>
 
-        <button
+        <Button
+          variant="secondary"
           onClick={() =>
             setSortOrder(sortOrder === "newest" ? "oldest" : "newest")
           }
@@ -56,7 +56,7 @@ const TodoApp = () => {
         >
           <ArrowUpDown size={16} />
           {sortOrder === "newest" ? "Newest" : "Oldest"}
-        </button>
+        </Button>
       </div>
 
       <ul className="space-y-3">

@@ -4,17 +4,40 @@ import {
   useMemo,
   useCallback,
   type ReactNode,
+  useEffect,
 } from "react";
 import type { Task, FilterStatus, TaskContextType, SortOrder } from "../types";
 import { processedTasks } from "../utils";
 import { TaskContext } from "../types";
 export const TaskProvider = ({ children }: { children: ReactNode }) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    if (typeof window === "undefined") return []; // Safety check for SSR (Next.js)
+
+    const saved = localStorage.getItem("todo-tasks");
+    if (!saved) return [];
+
+    try {
+      const parsed = JSON.parse(saved);
+
+      return parsed.map((t: any) => ({
+        ...t,
+        createdAt: new Date(t.createdAt),
+      }));
+    } catch (error) {
+      console.error("Failed to parse tasks from localStorage", error);
+      return [];
+    }
+  });
+
   const [input, setInput] = useState("");
   const [updating, setUpdating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+
+  useEffect(() => {
+    localStorage.setItem("todo-tasks", JSON.stringify(tasks));
+  }, [tasks]);
 
   const addTask = (text: string) => {
     if (updating && editingId) {
@@ -23,7 +46,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       );
       setUpdating(false);
       setEditingId(null);
-      setInput(""); // Reset internal string
+      setInput("");
     } else {
       const newTask: Task = {
         id: crypto.randomUUID(),
