@@ -7,3 +7,10 @@ export interface Task {
   completed: boolean;
   createdAt: Date;
 }
+
+export interface TaskState {
+  tasks: Task[];
+  filter: FilterStatus;
+  sortOrder: SortOrder;
+  editingId: string | null;
+}
