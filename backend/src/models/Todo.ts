@@ -1,6 +1,7 @@
 import { Schema, model, Document } from "mongoose";
+import { ITodo } from "../types";
 
-const todoSchema = new Schema(
+const todoSchema = new Schema<ITodo>(
   {
     text: {
       type: String,
@@ -26,4 +27,4 @@ const todoSchema = new Schema(
   },
 );
 
-export default model("Todo", todoSchema);
+export default model<ITodo>("Todo", todoSchema);

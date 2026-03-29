@@ -43,6 +43,15 @@ const TodoApp = () => {
     }
   };
 
+  const handleToggle = async (id: string, currentStatus: boolean) => {
+    try {
+      await taskService.update(id, { completed: !currentStatus });
+      dispatch({ type: "TOGGLE_TASK", payload: id });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const taskToDelete = tasks.find((t) => t.id === taskToDeleteId);
 
   return (
@@ -94,6 +103,7 @@ const TodoApp = () => {
             task={task}
             dispatch={dispatch}
             onDeleteTrigger={openDeleteModal}
+            onToggle={() => handleToggle(task.id, task.completed)}
           />
         ))}
       </ul>

@@ -9,10 +9,13 @@ export const TaskItem = memo(
     task,
     dispatch,
     onDeleteTrigger,
+    onToggle,
   }: {
     task: Task;
     dispatch: React.Dispatch<any>;
     onDeleteTrigger: (id: string) => void;
+    onToggle: (id: string,completed: boolean
+    ) => void;
   }) => {
     return (
       <li className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group transition-all">
@@ -21,7 +24,7 @@ export const TaskItem = memo(
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
-            onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
+            onClick={() => onToggle(task.id, task.completed) }
           >
             {task.completed ? (
               <CheckCircle className="fill-blue-100" />
