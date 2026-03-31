@@ -1,7 +1,8 @@
 import { Schema, model, Document } from "mongoose";
 import { ITodo } from "../types";
+export interface ITodoDocument extends ITodo, Document {}
 
-const todoSchema = new Schema<ITodo>(
+const todoSchema = new Schema<ITodoDocument>(
   {
     text: {
       type: String,
@@ -15,16 +16,16 @@ const todoSchema = new Schema<ITodo>(
   },
   {
     timestamps: true,
-    toJSON: {
-      virtuals: true,
-      versionKey: false,
-      transform: (_, ret: any) => {
-        ret.id = ret._id.toString();
-        delete ret._id;
-        return ret;
-      },
-    },
+    // toJSON: {
+    //   virtuals: true,
+    //   versionKey: false,
+    //   transform: (_, ret: any) => {
+    //     ret.id = ret._id.toString();
+    //     delete ret._id;
+    //     return ret;
+    //   },
+    // },
   },
 );
 
-export default model<ITodo>("Todo", todoSchema);
+export default model<ITodoDocument>("Todo", todoSchema);

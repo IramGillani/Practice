@@ -2,11 +2,10 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/main.ts",
-    "start": "node dist/main.js",
-    "build": "tsc"
+    "dev": "tsup src/main.ts --watch --onSuccess \"nodemon dist/main.js\"",
+    "build": "tsup src/main.ts --clean",
+    "start": "node dist/main.js"
   },
   "keywords": [],
   "author": "",
@@ -23,7 +22,8 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
     "nodemon": "^3.1.14",
-    "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   }
 }

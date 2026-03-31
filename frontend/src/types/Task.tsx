@@ -2,7 +2,7 @@ export type FilterStatus = "all" | "completed" | "active";
 export type SortOrder = "newest" | "oldest";
 
 export interface Task {
-  id: string;
+  _id: string;
   text: string;
   completed: boolean;
   createdAt: Date;
@@ -14,4 +14,5 @@ export interface TaskState {
   sortOrder: SortOrder;
   editingId: string | null;
   isLoading: boolean;
+  error: string | null;
 }

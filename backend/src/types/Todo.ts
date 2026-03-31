@@ -1,4 +1,4 @@
-export interface ITodo extends Document {
+export interface ITodo {
   text: string;
   completed: boolean;
   createdAt: Date;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -7,8 +7,8 @@ import { Check, Plus, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel, FieldError, FieldGroup } from "./ui/field";
-import { useTaskState, useTaskDispatch } from "@/context/TaskProvider";
 
+import { useTask } from "@/context/TaskProvider";
 import { taskService } from "@/api/taskApi";
 import { cn } from "@/lib/utils";
 
@@ -21,16 +21,15 @@ const TaskInputSchema = yup
 type TaskFormValues = yup.InferType<typeof TaskInputSchema>;
 
 export default function TaskInput() {
-  const { editingId, tasks } = useTaskState();
-  const dispatch = useTaskDispatch();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { state, dispatch } = useTask();
+  const { editingId, tasks } = state;
 
-  const taskToEdit = tasks.find((t) => t.id === editingId);
+  const taskToEdit = tasks.find((t) => t._id === editingId);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting }, // Destructured from formState
     reset,
     setValue,
   } = useForm<TaskFormValues>({
@@ -47,7 +46,6 @@ export default function TaskInput() {
   }, [taskToEdit, setValue, reset]);
 
   const onSubmit = async (data: TaskFormValues) => {
-    setIsSubmitting(true);
     try {
       if (editingId) {
         const updated = await taskService.update(editingId, {
@@ -58,15 +56,17 @@ export default function TaskInput() {
         dispatch({ type: "START_EDIT", payload: null });
       } else {
         const newTask = await taskService.create(data.task);
-
         dispatch({ type: "ADD_TASK", payload: newTask });
       }
       reset();
     } catch (error) {
       console.error("Submission failed:", error);
-    } finally {
-      setIsSubmitting(false);
+      dispatch({
+        type: "SET_ERROR",
+        payload: "Failed to submit task.",
+      });
     }
+    // No manual setIsSubmitting(false) needed here
   };
 
   const isEditing = !!editingId;

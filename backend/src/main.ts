@@ -4,12 +4,9 @@ import express, { Application } from "express";
 import cors from "cors";
 import { connectDB } from "./config/db";
 import todoRoutes from "./routes/todoRoutes";
+import mongoose from "mongoose";
 
 const app: Application = express();
-console.log("Attempting to start server...");
-
-// Connect Database
-connectDB();
 
 // Middleware
 app.use(cors());
@@ -20,6 +17,24 @@ app.use("/api/todos", todoRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const startServer = async () => {
+  try {
+    console.log("Attempting to connect to MongoDB...");
+    await connectDB(); // Ensure this is awaited
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    // console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+// Handle Nodemon reloads gracefully
+process.once("SIGUSR2", async () => {
+  await mongoose.connection.close();
+  process.kill(process.pid, "SIGUSR2");
 });
+
+startServer();

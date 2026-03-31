@@ -1,6 +1,6 @@
 import type { Task, TaskState, FilterStatus, SortOrder } from "@/types";
 
-type TaskAction =
+export type TaskAction =
   | { type: "SET_TASKS"; payload: Task[] }
   | { type: "ADD_TASK"; payload: Task }
   | { type: "TOGGLE_TASK"; payload: string }
@@ -9,7 +9,9 @@ type TaskAction =
   | { type: "SET_FILTER"; payload: FilterStatus }
   | { type: "SET_SORT"; payload: SortOrder }
   | { type: "START_EDIT"; payload: string | null }
-  | { type: "SET_LOADING"; payload: boolean };
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_ERROR"; payload: string | null }
+  | { type: "CLEAR_ERROR" };
 
 export const taskReducer = (
   state: TaskState,
@@ -17,7 +19,11 @@ export const taskReducer = (
 ): TaskState => {
   switch (action.type) {
     case "SET_TASKS":
-      return { ...state, tasks: action.payload };
+      return {
+        ...state,
+        tasks: action.payload,
+        isLoading: false,
+      };
 
     case "ADD_TASK":
       return {
@@ -29,7 +35,7 @@ export const taskReducer = (
       return {
         ...state,
         tasks: state.tasks.map((t) =>
-          t.id === action.payload ? { ...t, completed: !t.completed } : t,
+          t._id === action.payload ? { ...t, completed: !t.completed } : t,
         ),
       };
 
@@ -37,15 +43,26 @@ export const taskReducer = (
       return {
         ...state,
         tasks: state.tasks.map((t) =>
-          t.id === action.payload.id ? action.payload : t,
+          t._id === action.payload._id ? action.payload : t,
         ),
         editingId: null,
       };
 
+    case "SET_ERROR":
+      return {
+        ...state,
+        error: action.payload,
+        isLoading: false,
+      };
+
+    case "CLEAR_ERROR":
+      return { ...state, error: null };
+
     case "DELETE_TASK":
       return {
         ...state,
-        tasks: state.tasks.filter((t) => t.id !== action.payload),
+        tasks: state.tasks.filter((t) => t._id !== action.payload),
+        error: null,
       };
 
     case "SET_FILTER":
@@ -62,12 +79,7 @@ export const taskReducer = (
         ...state,
         isLoading: action.payload,
       };
-    case "SET_TASKS":
-      return {
-        ...state,
-        tasks: action.payload,
-        isLoading: false,
-      };
+
     default:
       return state;
   }

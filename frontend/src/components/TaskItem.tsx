@@ -3,6 +3,7 @@ import { CheckCircle, Circle, FilePen, Trash2 } from "lucide-react";
 import { type Task } from "../types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { TaskAction } from "@/context/TaskReducer";
 
 export const TaskItem = memo(
   ({
@@ -12,10 +13,9 @@ export const TaskItem = memo(
     onToggle,
   }: {
     task: Task;
-    dispatch: React.Dispatch<any>;
+    dispatch: React.Dispatch<TaskAction>;
     onDeleteTrigger: (id: string) => void;
-    onToggle: (id: string,completed: boolean
-    ) => void;
+    onToggle: (id: string, completed: boolean) => void;
   }) => {
     return (
       <li className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group transition-all">
@@ -24,7 +24,7 @@ export const TaskItem = memo(
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
-            onClick={() => onToggle(task.id, task.completed) }
+            onClick={() => onToggle(task._id, task.completed)}
           >
             {task.completed ? (
               <CheckCircle className="fill-blue-100" />
@@ -49,7 +49,7 @@ export const TaskItem = memo(
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => dispatch({ type: "START_EDIT", payload: task.id })}
+            onClick={() => dispatch({ type: "START_EDIT", payload: task._id })}
           >
             <FilePen size={18} />
             <span className="sr-only">Edit Task</span>
@@ -59,7 +59,7 @@ export const TaskItem = memo(
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => onDeleteTrigger(task.id)}
+            onClick={() => onDeleteTrigger(task._id)}
           >
             <Trash2 size={18} />
             <span className="sr-only">Delete Task</span>

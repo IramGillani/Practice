@@ -4,7 +4,7 @@ import Todo from "../models/Todo";
 export const getTodos = async (req: Request, res: Response) => {
   try {
     const todos = await Todo.find().sort({ createdAt: -1 });
-    console.log(`✅ Fetched ${todos.length} tasks`);
+    console.log(`✅ Fetched ${todos} tasks`);
     res.status(200).json(todos);
   } catch (error) {
     console.error("❌ GET Error:", error);
