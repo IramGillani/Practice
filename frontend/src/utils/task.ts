@@ -18,3 +18,25 @@ export const processedTasks = (
 
   return result;
 };
+
+export function transformDates(data: any): any {
+  if (data === null || data === undefined || typeof data !== "object") {
+    return data;
+  }
+
+  for (const key in data) {
+    if (Object.prototype.hasOwnProperty.call(data, key)) {
+      const value = data[key];
+
+      if (
+        (key === "createdAt" || key === "updatedAt") &&
+        typeof value === "string"
+      ) {
+        data[key] = new Date(value);
+      } else if (typeof value === "object") {
+        transformDates(value);
+      }
+    }
+  }
+  return data;
+}
