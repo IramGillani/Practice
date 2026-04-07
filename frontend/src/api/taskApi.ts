@@ -8,6 +8,7 @@ import axios, {
 import { transformDates } from "@/utils";
 
 const API_URL = import.meta.env.VITE_API_URL;
+const BASE_PATH = "todos";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -16,9 +17,6 @@ const api = axios.create({
   },
 });
 
-// --- Interceptors ---
-
-// 1. Request Interceptor: Actions before the request is sent
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem("token"); // Or your auth store
@@ -34,33 +32,26 @@ api.interceptors.request.use(
   },
 );
 
-// 2. Response Interceptor: Actions after the response is received
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Automatically transform dates for every successful response
     if (response.data) {
       response.data = transformDates(response.data);
     }
     return response;
   },
   (error: AxiosError) => {
-    // Global Error Handling (e.g., 401 Unauthorized)
     if (error.response?.status === 401) {
       console.error("Session expired. Redirecting to login...");
-      // window.location.href = '/login';
     }
     return Promise.reject(error);
   },
 );
-
-// --- Simplified apiRequest ---
 
 async function apiRequest<T>(
   endpoint: string,
   options?: AxiosRequestConfig,
 ): Promise<T> {
   try {
-    // The interceptors now handle logging and date transformation!
     const response = await api.request<T>({
       url: endpoint,
       ...options,
@@ -77,22 +68,22 @@ async function apiRequest<T>(
 }
 
 export const taskService = {
-  getAll: () => apiRequest<Task[]>("/todos"),
+  getAll: () => apiRequest<Task[]>(BASE_PATH),
 
   create: (taskText: string) =>
-    apiRequest<Task>("todos", {
+    apiRequest<Task>(BASE_PATH, {
       method: "POST",
       data: { text: taskText },
     }),
 
   update: (id: string, updates: Partial<Task>) =>
-    apiRequest<Task>(`todos/${id}`, {
+    apiRequest<Task>(`${BASE_PATH}/${id}`, {
       method: "PATCH",
       data: updates,
     }),
 
   delete: (id: string) =>
-    apiRequest<{ message: string }>(`todos/${id}`, {
+    apiRequest<{ message: string }>(`${BASE_PATH}/${id}`, {
       method: "DELETE",
     }),
 };

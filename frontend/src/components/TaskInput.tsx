@@ -29,7 +29,7 @@ export default function TaskInput() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }, // Destructured from formState
+    formState: { errors, isSubmitting },
     reset,
     setValue,
   } = useForm<TaskFormValues>({
@@ -66,7 +66,6 @@ export default function TaskInput() {
         payload: "Failed to submit task.",
       });
     }
-    // No manual setIsSubmitting(false) needed here
   };
 
   const isEditing = !!editingId;
