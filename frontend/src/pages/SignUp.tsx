@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { authService } from "@/api/authApi";
 import { Input } from "@/components/ui/input";
 import {
   Form,
@@ -19,21 +20,32 @@ export function Signup() {
   const navigate = useNavigate();
   const form = useForm<SignupFormValues>({
     resolver: yupResolver(signupSchema),
+    mode: "onTouched",
     defaultValues: { name: "", email: "", password: "" },
   });
 
-  const onSubmit = (data: SignupFormValues) => {
-    const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
+  const onSubmit = async (data: SignupFormValues) => {
+    try {
+      const response = await authService.signup(data);
+      console.log("✅ Signup successful:", response);
+      login(response.user, response.token);
 
-    if (existingUsers.find((u: User) => u.email === data.email)) {
-      form.setError("email", { message: "Email already registered" });
-      return;
+      navigate("/todos");
+    } catch (error: any) {
+      const status = error.response?.status;
+
+      if (status === 409) {
+        form.setError("email", {
+          message: "This email is already registered.",
+        });
+      } else {
+        form.setError("root", {
+          message:
+            error.response?.data?.message ||
+            "Something went wrong during registration.",
+        });
+      }
     }
-
-    const updatedUsers = [...existingUsers, data];
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    login(data as User);
-    navigate("/todos");
   };
 
   return (
@@ -61,7 +73,7 @@ export function Signup() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="Email" {...field} />
+                  <Input type="text" placeholder="Email" {...field} />
                 </FormControl>
                 <FormMessage name="email" />
               </FormItem>

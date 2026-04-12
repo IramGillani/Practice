@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
-
+import { authService } from "@/api/authApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,7 +15,7 @@ import {
   FormMessage,
   FormControl,
 } from "@/components/ui/form";
-import { loginSchema, type LoginFormValues, type User } from "@/types";
+import { loginSchema, type LoginFormValues } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 
 export function LoginForm() {
@@ -24,6 +24,7 @@ export function LoginForm() {
 
   const form = useForm<LoginFormValues>({
     resolver: yupResolver(loginSchema),
+    mode: "onTouched",
     defaultValues: {
       email: "",
       password: "",
@@ -32,51 +33,26 @@ export function LoginForm() {
 
   const { login } = useAuth();
 
-  // const onSubmit = (data: AuthFormValues) => {
-  //   setServerError(null);
-
-  //   const users = JSON.parse(localStorage.getItem("users") || "[]");
-
-  //   const user = users.find(
-  //     (u: AuthFormValues) =>
-  //       u.email === data.email && u.password === data.password,
-  //   );
-
-  //   if (user) {
-  //     localStorage.setItem("currentUser", JSON.stringify(user));
-  //     navigate("/todos");
-  //   } else {
-  //     const emailExists = users.some((u: any) => u.email === data.email);
-
-  //     if (!emailExists) {
-  //       navigate("/signup");
-  //     } else {
-  //       setServerError("Invalid credentials. Please try again.");
-  //     }
-  //   }
-  // };
-
-  const onSubmit = (data: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormValues) => {
     setServerError(null);
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    console.log("Users in localStorage:", users);
-    const foundUser = users.find(
-      (u: User) => u.email === data.email && u.password === data.password,
-    );
 
-    if (foundUser) {
-      login(foundUser);
+    try {
+      const response = await authService.login(data as LoginFormValues);
+      console.log("Login successful:", response);
+      login(response.user, response.token);
       navigate("/todos");
-    } else {
-      const emailExists = users.some((u: User) => u.email === data.email);
-      console.log("Email exists:", emailExists);
+    } catch (error: any) {
+      const status = error.response?.status;
 
-      if (!emailExists) {
+      if (status === 404) {
         setServerError("Account not found. Redirecting to signup...");
-        setTimeout(() => navigate("/signup"), 8000);
-        navigate("/signup");
-      } else {
+        setTimeout(() => navigate("/signup"), 2000);
+      } else if (status === 401) {
         setServerError("Invalid credentials. Please try again.");
+      } else {
+        setServerError(
+          error.response?.data?.message || "An unexpected error occurred.",
+        );
       }
     }
   };
@@ -101,7 +77,7 @@ export function LoginForm() {
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
-                    type="email"
+                    type="text"
                     placeholder="email@example.com"
                     {...field}
                   />

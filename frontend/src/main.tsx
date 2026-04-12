@@ -5,13 +5,16 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.tsx";
 
 import { TaskProvider } from "./context/TaskProvider.tsx";
+import { AuthProvider } from "./context/AuthContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <TaskProvider>
-        <App />
-      </TaskProvider>
+      <AuthProvider>
+        <TaskProvider>
+          <App />
+        </TaskProvider>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 );
