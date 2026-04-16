@@ -5,33 +5,62 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+
+import { AUTH_KEYS } from "@/types";
+import { authService } from "@/api/authApi";
 import type { AuthContextType, User } from "@/types";
+import { useNavigate } from "react-router-dom";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const login = (userData: User, token: string) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(userData));
+  const login = (userData: User, accessToken: string,refreshToken:string) => {
+    localStorage.setItem(AUTH_KEYS.ACCESS, accessToken);
+    localStorage.setItem(AUTH_KEYS.REFRESH, refreshToken);
+    console.log(
+      "accessToken, userData and refreshToken:",
+      accessToken,
+      userData,
+      refreshToken
+    );
+
+    localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(userData));
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
+  const logout = async () => {
+    try {
+      const refreshToken = localStorage.getItem(AUTH_KEYS.REFRESH);
+
+      if (refreshToken) {
+        await authService.logout();
+      }
+    } catch (error) {
+      console.error("Backend logout failed:", error);
+    } finally {
+      localStorage.removeItem(AUTH_KEYS.ACCESS);
+      localStorage.removeItem(AUTH_KEYS.REFRESH);
+      localStorage.removeItem(AUTH_KEYS.USER);
+
+      setUser(null);
+      navigate("/login");
+    }
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
-
+    const token = localStorage.getItem(AUTH_KEYS.ACCESS);
+    const savedUser = localStorage.getItem(AUTH_KEYS.USER);
     if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (err) {
+        console.error("Failed to parse saved user", err);
+        logout();
+      }
     }
-
     setIsLoading(false);
   }, []);
 

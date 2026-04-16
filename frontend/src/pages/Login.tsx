@@ -39,7 +39,7 @@ export function LoginForm() {
     try {
       const response = await authService.login(data as LoginFormValues);
       console.log("Login successful:", response);
-      login(response.user, response.token);
+      login(response.user, response.accessToken, response.refreshToken);
       navigate("/todos");
     } catch (error: any) {
       const status = error.response?.status;

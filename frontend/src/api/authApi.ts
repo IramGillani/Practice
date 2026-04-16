@@ -1,5 +1,10 @@
 import { apiRequest } from "@/utils";
-import type { AuthResponse, LoginFormValues, SignupFormValues } from "@/types";
+import {
+  AUTH_KEYS,
+  type AuthResponse,
+  type LoginFormValues,
+  type SignupFormValues,
+} from "@/types";
 
 const BASE_PATH = "users";
 
@@ -16,10 +21,13 @@ export const authService = {
       data: credentials,
     }),
 
-  logout: () =>
-    apiRequest<{ message: string }>(`${BASE_PATH}/logout`, {
+  logout: () => {
+    const token = localStorage.getItem(AUTH_KEYS.REFRESH);
+    return apiRequest<{ message: string }>(`${BASE_PATH}/logout`, {
       method: "POST",
-    }),
+      data: { token },
+    });
+  },
 
   // getProfile: () =>
   //   apiRequest<User>(`${BASE_PATH}/profile`, {

@@ -3,8 +3,12 @@ import Todo from "../models/Todo";
 
 export const getTodos = async (req: Request, res: Response) => {
   try {
-    const todos = await Todo.find().sort({ createdAt: -1 });
-    console.log(`✅ Fetched ${todos} tasks`);
+    const todos = await Todo.find({ userId: req.user._id }).sort({
+      createdAt: -1,
+    });
+    console.log("👤 User ID:", req.user._id);
+    console.log(`✅ Fetched ${todos.length} tasks`);
+
     res.status(200).json(todos);
   } catch (error) {
     console.error("❌ GET Error:", error);
@@ -22,7 +26,7 @@ export const createTodo = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Must enter a task" });
     }
 
-    const newTodo = await Todo.create({ text });
+    const newTodo = await Todo.create({ text, userId: req.user._id });
     console.log("✨ Task Created:", newTodo);
     res.status(201).json(newTodo);
   } catch (error) {
@@ -33,14 +37,18 @@ export const createTodo = async (req: Request, res: Response) => {
 
 export const updateTodo = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { _id } = req.params;
     const updates = req.body;
-    console.log(`🔄 Updating Task ${id} with:`, updates);
+    console.log(`🔄 Updating Task ${_id} with:`, updates);
 
-    const updatedTodo = await Todo.findByIdAndUpdate(id, updates, {
-      returnDocument: "after",
-      runValidators: true,
-    });
+    const updatedTodo = await Todo.findOneAndUpdate(
+      { _id, userId: req.user._id },
+      updates,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
 
     if (!updatedTodo)
       return res.status(404).json({ message: "Task not found" });
@@ -54,18 +62,21 @@ export const updateTodo = async (req: Request, res: Response) => {
 
 export const deleteTodo = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    console.log(`🗑️ Attempting to delete ID: ${id}`);
+    const { _id } = req.params;
+    console.log(`🗑️ Attempting to delete ID: ${_id}`);
 
-    const deletedTodo = await Todo.findByIdAndDelete(id);
+    const deletedTodo = await Todo.findOneAndDelete({
+      _id,
+      userId: req.user._id,
+    });
 
     if (!deletedTodo) {
-      console.warn(`⚠️ Task ${id} not found in Database`);
+      console.warn(`⚠️ Task ${_id} not found in Database`);
       return res.status(404).json({ message: "Task not found" });
     }
 
-    console.log(`✅ Successfully deleted task: ${id}`);
-    res.status(200).json({ id, message: "Deleted successfully" });
+    console.log(`✅ Successfully deleted task: ${_id}`);
+    res.status(200).json({ _id, message: "Deleted successfully" });
   } catch (error) {
     console.error("❌ Server Error during delete:", error);
     res.status(500).json({ message: "Internal server error" });
