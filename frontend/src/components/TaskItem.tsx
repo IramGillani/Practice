@@ -18,12 +18,12 @@ export const TaskItem = memo(
     onToggle: (id: string, completed: boolean) => void;
   }) => {
     return (
-      <li className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group transition-all">
+      <li className="flex items-center justify-between p-3 bg-secondry/50 rounded-lg group transition-all">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+            className="h-8 w-8 text-blue-500 hover:bg-primary/10 hover:text-blue-600"
             onClick={() => onToggle(task._id, task.completed)}
           >
             {task.completed ? (
@@ -36,8 +36,8 @@ export const TaskItem = memo(
 
           <span
             className={cn(
-              "text-gray-700 transition-all",
-              task.completed && "line-through text-gray-400",
+              "text-foreground transition-all",
+              task.completed && "line-through text-muted-foreground",
             )}
           >
             {task.text}
@@ -48,7 +48,7 @@ export const TaskItem = memo(
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-8 w-8 text-muted-foreground hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={() => dispatch({ type: "START_EDIT", payload: task._id })}
           >
             <FilePen size={18} />
@@ -58,7 +58,7 @@ export const TaskItem = memo(
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-8 w-8 text-gray-400 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={() => onDeleteTrigger(task._id)}
           >
             <Trash2 size={18} />

@@ -6,15 +6,18 @@ import App from "./App.tsx";
 
 import { TaskProvider } from "./context/TaskProvider.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
+import { ThemeProvider } from "./context/ThemeContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <TaskProvider>
-          <App />
-        </TaskProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <TaskProvider>
+            <App />
+          </TaskProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   </StrictMode>,
 );

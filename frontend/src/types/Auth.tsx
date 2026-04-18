@@ -3,6 +3,7 @@ export interface User {
   name: string;
   email: string;
   role?: "user" | "admin";
+  profileUrl: string;
 }
 
 import * as yup from "yup";
@@ -12,6 +13,7 @@ export interface AuthContextType {
   login: (userData: User, accessToken: string, refreshToken: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  updateUserData: (userData: User) => void;
   isLoading: boolean;
 }
 
@@ -50,3 +52,19 @@ export const AUTH_KEYS = {
   REFRESH: "refreshToken",
   USER: "user",
 };
+
+export const passwordSchema = yup.object({
+  currentPassword: yup.string().required("Current password is required"),
+
+  newPassword: yup
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .required("New password is required"),
+
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref("newPassword")], "Passwords do not match")
+    .required("Confirm password is required"),
+});
+
+export type PasswordFormValues = yup.InferType<typeof passwordSchema>;

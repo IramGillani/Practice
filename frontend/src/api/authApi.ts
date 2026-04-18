@@ -1,6 +1,5 @@
 import { apiRequest } from "@/utils";
 import {
-  AUTH_KEYS,
   type AuthResponse,
   type LoginFormValues,
   type SignupFormValues,
@@ -21,11 +20,10 @@ export const authService = {
       data: credentials,
     }),
 
-  logout: () => {
-    const token = localStorage.getItem(AUTH_KEYS.REFRESH);
+  logout: (refreshToken: string) => {
     return apiRequest<{ message: string }>(`${BASE_PATH}/logout`, {
       method: "POST",
-      data: { token },
+      data: { token: refreshToken },
     });
   },
 

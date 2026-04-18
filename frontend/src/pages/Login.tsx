@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // Added Link
 import { authService } from "@/api/authApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,7 @@ export function LoginForm() {
       navigate("/todos");
     } catch (error: any) {
       const status = error.response?.status;
+      console.log(status);
 
       if (status === 404) {
         setServerError("Account not found. Redirecting to signup...");
@@ -82,7 +83,7 @@ export function LoginForm() {
                     {...field}
                   />
                 </FormControl>
-                <FormMessage name="email" />
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -90,22 +91,33 @@ export function LoginForm() {
           <FormField
             control={form.control}
             name="password"
-            render={({ field }) => {
-              return (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="******" {...field} />
-                  </FormControl>
-                  <FormMessage name="password" />
-                </FormItem>
-              );
-            }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="******" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           <Button type="submit" className="w-full">
             Sign In
           </Button>
+
+          {/* New Redirect Link Section */}
+          <div className="mt-4 text-center text-sm">
+            <span className="text-muted-foreground">
+              Don&apos;t have an account?{" "}
+            </span>
+            <Link
+              to="/signup"
+              className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+            >
+              Sign up
+            </Link>
+          </div>
         </form>
       </Form>
     </div>

@@ -60,8 +60,8 @@ const TodoApp = () => {
   const taskToDelete = tasks.find((t) => t._id === taskToDeleteId);
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg border border-gray-100">
-      <h1 className="text-center text-2xl font-bold text-gray-800 mb-6">
+    <div className="max-w-md mx-auto mt-10 p-6 bg-background text-foreground border-border rounded-xl shadow-lg border ">
+      <h1 className="text-center text-2xl font-bold text-foreground mb-6">
         Task Manager
       </h1>
       <ErrorMessage />
@@ -70,7 +70,7 @@ const TodoApp = () => {
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pt-4 border-b">
-            <div className="flex bg-gray-100 rounded-md p-1">
+            <div className="flex bg-muted rounded-md p-1">
               {(["all", "active", "completed"] as FilterStatus[]).map(
                 (status) => (
                   <Button
@@ -122,7 +122,9 @@ const TodoApp = () => {
           </ul>
 
           {filteredTasks.length === 0 && (
-            <p className="text-center text-gray-400 mt-10">No tasks found.</p>
+            <p className="text-center text-muted-foreground mt-10">
+              No tasks found.
+            </p>
           )}
 
           <TaskInput />

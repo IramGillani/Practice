@@ -1,9 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { LoginForm } from "./pages/Login";
 import { Signup } from "./pages/SignUp";
-import { Button } from "./components/ui/button";
 import TodoApp from "./pages/TodoApp";
 import { useAuth } from "./context/AuthContext";
+import Navbar from "./components/Navbar";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -17,7 +17,6 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  const { logout } = useAuth();
   return (
     <div className="min-h-screen bg-background p-4">
       <Routes>
@@ -44,15 +43,8 @@ function App() {
           path="/todos"
           element={
             <ProtectedRoute>
+              <Navbar />
               <TodoApp />
-              <Button
-                className="mt-6"
-                onClick={() => {
-                  logout();
-                }}
-              >
-                Logout
-              </Button>
             </ProtectedRoute>
           }
         />

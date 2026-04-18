@@ -6,4 +6,6 @@ export interface IUser {
   createdAt: Date;
   role: string;
   refreshToken?: string | null;
+  profile: string;
+  profileUrl?: string;
 }

@@ -28,7 +28,7 @@ export function Signup() {
     try {
       const response = await authService.signup(data);
       console.log("✅ Signup successful:", response);
-      login(response.user, response.accessToken, refreshToken);
+      login(response.user, response.accessToken, response.refreshToken);
 
       navigate("/todos");
     } catch (error: any) {

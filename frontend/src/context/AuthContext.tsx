@@ -17,14 +17,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  const login = (userData: User, accessToken: string,refreshToken:string) => {
+  const login = (userData: User, accessToken: string, refreshToken: string) => {
     localStorage.setItem(AUTH_KEYS.ACCESS, accessToken);
     localStorage.setItem(AUTH_KEYS.REFRESH, refreshToken);
     console.log(
       "accessToken, userData and refreshToken:",
       accessToken,
       userData,
-      refreshToken
+      refreshToken,
     );
 
     localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(userData));
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const refreshToken = localStorage.getItem(AUTH_KEYS.REFRESH);
 
       if (refreshToken) {
-        await authService.logout();
+        await authService.logout(refreshToken);
       }
     } catch (error) {
       console.error("Backend logout failed:", error);
@@ -64,6 +64,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
+  const updateUserData = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(updatedUser));
+  };
+
   // useEffect(() => {
   //     const initAuth = async () => {
   //       const token = localStorage.getItem("token");
@@ -90,6 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         login,
         logout,
+        updateUserData,
         isAuthenticated: !!user,
         isLoading,
       }}

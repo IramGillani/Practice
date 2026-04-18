@@ -4,10 +4,15 @@ import express, { Application } from "express";
 import cors from "cors";
 import { connectDB } from "./config/db";
 import todoRoutes from "./routes/todoRoutes";
+import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import mongoose from "mongoose";
 
 const app: Application = express();
+
+import path from "path";
+
+app.use("/public", express.static(path.join(__dirname, "../public")));
 
 // Middleware
 app.use(cors());
@@ -15,7 +20,8 @@ app.use(express.json());
 
 // Routes
 app.use("/api/todos", todoRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/users", authRoutes);
+app.use("/api/profile", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 

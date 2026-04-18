@@ -1,101 +1,59 @@
-import User from "../models/User";
 import { Request, Response } from "express";
+import User from "../models/User";
 
-import jwt from "jsonwebtoken";
-import { sendAuthResponse } from "../utils/authHelper";
-
-import { generateTokens } from "../utils/generateToken";
-
-export const signup = async (req: Request, res: Response) => {
+export const updatePassword = async (req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
+    const { currentPassword, newPassword } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ message: "Email already registered" });
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Both fields are required" });
     }
 
-    const user = await User.create({ name, email, password });
-    console.log("✨ User Created:", user);
+    const user = await User.findById(req.user._id);
 
-    return sendAuthResponse(res, user, 201);
-  } catch (err: unknown) {
-    const errorMessage =
-      err instanceof Error ? err.message : "Internal Server Error";
-    res.status(500).json({ message: errorMessage });
-  }
-};
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-export const login = async (req: Request, res: Response) => {
-  console.log("login request body:", req.body);
-  try {
-    const { email, password } = req.body;
-    console.log("🔍 User Found:", email);
-    const user = await User.findOne({ email });
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch)
+      return res.status(400).json({ message: "Current password incorrect" });
 
-    if (!user) {
-      return res.status(404).json({ message: "Account not found" });
-    }
+    user.password = newPassword;
+    await user.save();
+    console.log("The user with updated password", user);
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-    return sendAuthResponse(res, user, 200);
+    res.json({ message: "Password updated successfully" });
   } catch (err) {
-    res.status(500).json({ message: "Server error during login" });
+    res.status(500).json({ message: "Error updating password" });
   }
 };
 
-export const logout = async (req: Request, res: Response) => {
+export const updateProfile = async (req: Request, res: Response) => {
   try {
-    const { token } = req.body;
+    const updates = { ...req.body };
+    console.log("Request", req.body);
 
-    if (!token) {
-      return res.status(400).json({ message: "Refresh Token is required" });
+    if (req.file) {
+      updates.profile = `/public/${req.file.filename}`;
+    }
+    console.log("The updates", updates);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updates },
+      { new: true, runValidators: true },
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as {
-      _id: string;
-    };
+    const userResponse = updatedUser.toObject({ virtuals: true });
 
-    await User.findByIdAndUpdate(decoded._id, { refreshToken: null });
-
-    res.json({ message: "Logged out successfully" });
+    console.log(" updated user", updatedUser);
+    res.json(userResponse);
+    console.log("userResponse", userResponse);
   } catch (err) {
-    res.status(200).json({ message: "Session already cleared" });
+    console.error("Update Error:", err);
+    res.status(500).json({ message: "Error updating profile" });
   }
 };
-
-export const refreshAccessToken = async (req: Request, res: Response) => {
-  const { token } = req.body;
-  console.log("Received refresh token:", token);
-
-  if (!token)
-    return res.status(401).json({ message: "Refresh Token required" });
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as {
-      _id: string;
-    };
-    const user = await User.findById(decoded._id);
-
-    if (!user || user.refreshToken !== token) {
-      return res.status(403).json({ message: "Invalid refresh token" });
-    }
-
-    const { accessToken } = generateTokens(decoded._id);
-
-    res.json({ accessToken });
-  } catch (err) {
-    res.status(403).json({ message: "Invalid or expired refresh token" });
-  }
-};
-
-// export const getProfile = async (req: any, res: Response) => {
-//   if (req.user) {
-//     res.json(req.user);
-//   } else {
-//     res.status(404).json({ message: "User not found" });
-//   }
-// };

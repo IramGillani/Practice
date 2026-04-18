@@ -6,6 +6,8 @@ declare global {
       user: {
         _id: string;
       };
+      file?: Multer.File;
+      files?: Multer.File[];
     }
   }
 }

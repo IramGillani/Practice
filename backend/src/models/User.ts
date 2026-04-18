@@ -13,6 +13,7 @@ const userSchema = new Schema<IUser, {}, IUserMethods>(
     password: { type: String, required: true },
     role: { type: String, enum: ["user", "admin"], default: "user" },
     refreshToken: { type: String, default: null },
+    profile: { type: String },
   },
   { timestamps: true },
 );
@@ -28,5 +29,12 @@ userSchema.methods.comparePassword = async function (
 ) {
   return bcrypt.compare(candidatePassword, this.password);
 };
+
+userSchema.virtual("profileUrl").get(function () {
+  if (!this.profile) return null;
+
+  const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+  return `${baseUrl}${this.profile}`;
+});
 
 export default model<IUser, Model<IUser, {}, IUserMethods>>("User", userSchema);

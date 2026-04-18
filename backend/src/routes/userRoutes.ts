@@ -1,18 +1,13 @@
-import { Router } from "express";
-import {
-  signup,
-  login,
-  refreshAccessToken,
-  logout,
-} from "../controllers/userController";
+import express from "express";
+import { updateProfile, updatePassword } from "../controllers/userController";
+import upload from "../middlewares/upload";
 
-const router = Router();
+import { authenticateToken } from "../middlewares/auth";
 
-router.post("/signup", signup);
-router.post("/login", login);
-router.post("/logout", logout);
-router.post("/refresh-token", refreshAccessToken);
+const router = express.Router();
 
-// router.get("/profile", authMiddleware, getProfile);
+router.use(authenticateToken);
+router.patch("/updatePassword", updatePassword);
+router.patch("/updateProfile", upload.single("profile"), updateProfile);
 
 export default router;
