@@ -5,13 +5,15 @@ import {
   updateTodo,
   deleteTodo,
 } from "../controllers/todoController";
+import { authenticateToken } from "../middlewares/auth";
 
 const router = Router();
 
-// Standard RESTful pattern
+router.use(authenticateToken);
+
 router.get("/", getTodos); // GET /api/todos
 router.post("/", createTodo); // POST /api/todos
-router.patch("/:id", updateTodo); // PATCH /api/todos/:id
-router.delete("/:id", deleteTodo); // DELETE /api/todos/:id
+router.patch("/:_id", updateTodo); // PATCH /api/todos/:_id
+router.delete("/:_id", deleteTodo); // DELETE /api/todos/:_id
 
 export default router;

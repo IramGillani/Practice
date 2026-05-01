@@ -1,3 +1,4 @@
+//Todos types
 export type FilterStatus = "all" | "completed" | "active";
 export type SortOrder = "newest" | "oldest";
 

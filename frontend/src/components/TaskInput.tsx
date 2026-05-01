@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 const TaskInputSchema = yup
   .object({
-    task: yup.string().required("Please! Enter a task"),
+    text: yup.string().required("Please! Enter a task"),
   })
   .required();
 
@@ -29,19 +29,19 @@ export default function TaskInput() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }, // Destructured from formState
+    formState: { errors, isSubmitting },
     reset,
     setValue,
   } = useForm<TaskFormValues>({
     resolver: yupResolver(TaskInputSchema),
-    defaultValues: { task: taskToEdit?.text || "" },
+    defaultValues: { text: taskToEdit?.text || "" },
   });
 
   useEffect(() => {
     if (taskToEdit) {
-      setValue("task", taskToEdit.text);
+      setValue("text", taskToEdit.text);
     } else {
-      reset({ task: "" });
+      reset({ text: "" });
     }
   }, [taskToEdit, setValue, reset]);
 
@@ -49,13 +49,13 @@ export default function TaskInput() {
     try {
       if (editingId) {
         const updated = await taskService.update(editingId, {
-          text: data.task,
+          text: data.text,
         });
 
         dispatch({ type: "UPDATE_TASK", payload: updated });
         dispatch({ type: "START_EDIT", payload: null });
       } else {
-        const newTask = await taskService.create(data.task);
+        const newTask = await taskService.create(data.text);
         dispatch({ type: "ADD_TASK", payload: newTask });
       }
       reset();
@@ -66,7 +66,6 @@ export default function TaskInput() {
         payload: "Failed to submit task.",
       });
     }
-    // No manual setIsSubmitting(false) needed here
   };
 
   const isEditing = !!editingId;
@@ -74,16 +73,16 @@ export default function TaskInput() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
       <FieldGroup className="flex flex-row gap-2 items-center relative">
-        <Field className="grow" data-invalid={!!errors.task}>
+        <Field className="grow" data-invalid={!!errors.text}>
           <FieldLabel className="sr-only">New Task</FieldLabel>
           <Input
-            {...register("task")}
+            {...register("text")}
             placeholder={isEditing ? "Edit task..." : "Enter a new task..."}
             className="py-4"
             disabled={isSubmitting}
           />
           <FieldError className="text-xs mt-0 absolute -bottom-5 left-2">
-            {errors.task?.message}
+            {errors.text?.message}
           </FieldError>
         </Field>
 

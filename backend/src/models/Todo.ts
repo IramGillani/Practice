@@ -1,5 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 import { ITodo } from "../types";
+import User from "./User";
+
 export interface ITodoDocument extends ITodo, Document {}
 
 const todoSchema = new Schema<ITodoDocument>(
@@ -13,6 +15,7 @@ const todoSchema = new Schema<ITodoDocument>(
       type: Boolean,
       default: false,
     },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   {
     timestamps: true,
