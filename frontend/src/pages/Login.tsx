@@ -83,7 +83,7 @@ export function LoginForm() {
                     {...field}
                   />
                 </FormControl>
-                <FormMessage />
+                <FormMessage name="email" />
               </FormItem>
             )}
           />
@@ -97,7 +97,7 @@ export function LoginForm() {
                 <FormControl>
                   <Input type="password" placeholder="******" {...field} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage name="password" />
               </FormItem>
             )}
           />
@@ -106,7 +106,6 @@ export function LoginForm() {
             Sign In
           </Button>
 
-          {/* New Redirect Link Section */}
           <div className="mt-4 text-center text-sm">
             <span className="text-muted-foreground">
               Don&apos;t have an account?{" "}

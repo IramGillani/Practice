@@ -5,14 +5,12 @@ import axios, {
 } from "axios";
 import { transformDates } from "@/utils";
 import { AUTH_KEYS } from "@/types/Auth";
+import { toast } from "sonner";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 api.interceptors.request.use(
@@ -71,6 +69,7 @@ api.interceptors.response.use(
 
         if (window.location.pathname !== "/login") {
           window.location.href = "/login";
+          toast.error("Session expired. Please log in again.");
         }
         return Promise.reject(refreshError);
       }
@@ -79,9 +78,10 @@ api.interceptors.response.use(
     const errorMessage =
       error.response?.data?.message ||
       error.message ||
-      "An unexpected error occurred";
+      "An unknown error occurred";
     console.error(`❌ API Error:`, errorMessage);
-    return Promise.reject(new Error(errorMessage));
+    toast.error(errorMessage);
+    return Promise.reject(error);
   },
 );
 

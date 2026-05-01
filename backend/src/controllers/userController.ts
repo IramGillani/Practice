@@ -1,59 +1,38 @@
 import { Request, Response } from "express";
 import User from "../models/User";
+import fs from "fs/promises";
 
-export const updatePassword = async (req: Request, res: Response) => {
+export const updateInfo = async (req: Request, res: Response) => {
   try {
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: "Both fields are required" });
-    }
-
     const user = await User.findById(req.user._id);
-
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    const isMatch = await user.comparePassword(currentPassword);
-    if (!isMatch)
-      return res.status(400).json({ message: "Current password incorrect" });
-
-    user.password = newPassword;
-    await user.save();
-    console.log("The user with updated password", user);
-
-    res.json({ message: "Password updated successfully" });
-  } catch (err) {
-    res.status(500).json({ message: "Error updating password" });
-  }
-};
-
-export const updateProfile = async (req: Request, res: Response) => {
-  try {
-    const updates = { ...req.body };
-    console.log("Request", req.body);
-
-    if (req.file) {
-      updates.profile = `/public/${req.file.filename}`;
-    }
-    console.log("The updates", updates);
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      { $set: updates },
-      { new: true, runValidators: true },
-    ).select("-password");
-
-    if (!updatedUser) {
+    if (!user) {
+      if (req.file) {
+        await fs.unlink(req.file.path);
+      }
       return res.status(404).json({ message: "User not found" });
     }
 
-    const userResponse = updatedUser.toObject({ virtuals: true });
+    const { name, currentPassword, newPassword } = req.body;
 
-    console.log(" updated user", updatedUser);
-    res.json(userResponse);
-    console.log("userResponse", userResponse);
+    if (currentPassword && newPassword) {
+      const isMatch = await user.comparePassword(currentPassword);
+      if (!isMatch)
+        return res.status(400).json({ message: "Current password incorrect" });
+      user.password = newPassword;
+    }
+    if (name) user.name = name;
+
+    if (req.file) {
+      user.profile = `/profile/${req.file.filename}`;
+    }
+    await user.save();
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      user: user,
+    });
   } catch (err) {
-    console.error("Update Error:", err);
-    res.status(500).json({ message: "Error updating profile" });
+    console.log("update user info error", err);
+    return res.status(500).json({ message: "Error updating user info" });
   }
 };

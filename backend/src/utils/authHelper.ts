@@ -16,12 +16,6 @@ export const sendAuthResponse = async (
   return res.status(statusCode).json({
     accessToken,
     refreshToken,
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      profileUrl: user.profileUrl,
-    },
+    user: user,
   });
 };

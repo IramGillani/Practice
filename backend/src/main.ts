@@ -12,7 +12,7 @@ const app: Application = express();
 
 import path from "path";
 
-app.use("/public", express.static(path.join(__dirname, "../public")));
+app.use("/profile", express.static(path.join(__dirname, "../public/profile")));
 
 // Middleware
 app.use(cors());
