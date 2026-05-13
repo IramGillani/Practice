@@ -6,6 +6,7 @@ import { connectDB } from "./config/db";
 import todoRoutes from "./routes/todoRoutes";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
+import adminRoutes from "./routes/adminRoutes";
 import mongoose from "mongoose";
 
 const app: Application = express();
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use("/api/todos", todoRoutes);
 app.use("/api/users", authRoutes);
 app.use("/api/profile", userRoutes);
+app.use("/api/admin", adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 

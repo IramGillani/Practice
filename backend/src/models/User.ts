@@ -21,13 +21,14 @@ const userSchema = new Schema<IUser, {}, IUserMethods>(
     timestamps: true,
     toJSON: {
       virtuals: true,
-      transform: (doc, ret) => {
+      transform: (doc, ret, options) => {
         return {
           _id: ret._id,
           name: ret.name,
           email: ret.email,
           role: ret.role,
           profileUrl: ret.profileUrl || "",
+          taskCount: ret.taskCount || "00",
         };
       },
     },
@@ -78,6 +79,13 @@ userSchema.virtual("profileUrl").get(function () {
 
   const baseUrl = process.env.BASE_URL || "http://localhost:5000";
   return `${baseUrl}${this.profile}`;
+});
+
+userSchema.virtual("taskCount", {
+  ref: "Todo",
+  localField: "_id",
+  foreignField: "userId",
+  count: true,
 });
 
 export default model<IUser, Model<IUser, {}, IUserMethods>>("User", userSchema);

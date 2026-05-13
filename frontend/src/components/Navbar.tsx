@@ -1,5 +1,6 @@
 import { User, Settings, LogOut, Moon, Sun } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -58,6 +59,13 @@ const Navbar = () => {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" className="w-56">
+            {user?.role === "admin" && (
+              <DropdownMenuItem onClick={() => navigate("/adminPanel")}>
+                <LayoutDashboard size={16} className="mr-2" />
+                <span>Admin Dashboard</span>
+              </DropdownMenuItem>
+            )}
+
             <DropdownMenuItem onClick={() => navigate("/settings")}>
               <Settings size={16} className="mr-2" />
               <span>Settings</span>

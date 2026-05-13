@@ -8,6 +8,7 @@ export interface IUser {
   refreshToken?: string | null;
   profile: string;
   profileUrl?: string;
+  taskCount?: number;
 }
 
 export interface UserResponse {
@@ -16,4 +17,5 @@ export interface UserResponse {
   email: string;
   role: string;
   profileUrl: string;
+  taskCount?: number;
 }

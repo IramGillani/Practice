@@ -9,7 +9,7 @@ export const sendAuthResponse = async (
   user: IUser,
   statusCode: number = 200,
 ) => {
-  const { accessToken, refreshToken } = generateTokens(user._id);
+  const { accessToken, refreshToken } = generateTokens(user._id, user.role);
 
   await User.findByIdAndUpdate(user._id, { refreshToken });
 

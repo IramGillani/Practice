@@ -20,8 +20,8 @@ export const authenticateToken = (
         .json({ message: "Invalid or expired access token" });
     }
 
-    const payload = decoded as { _id: string };
-    req.user = { _id: payload._id };
+    const payload = decoded as { _id: string; role: string };
+    req.user = { _id: payload._id, role: payload.role };
 
     next();
   });

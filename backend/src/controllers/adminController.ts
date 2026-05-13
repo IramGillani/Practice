@@ -1,0 +1,98 @@
+import User from "../models/User.js";
+import Todo from "../models/Todo.js";
+import { Request, Response } from "express";
+import Task from "../models/Todo.js";
+
+export const getDashboardData = async (req: Request, res: Response) => {
+  try {
+    const [totalUsers, totalTasks, completedTasks] = await Promise.all([
+      User.countDocuments(),
+      Todo.countDocuments(),
+      Todo.countDocuments({ completed: true }),
+    ]);
+    return res.status(200).json({
+      success: true,
+      data: { totalUsers, totalTasks, completedTasks },
+    });
+  } catch (error) {
+    console.error("Error fetching summary:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      User.find().skip(skip).limit(limit).populate("taskCount"),
+      User.countDocuments(),
+    ]);
+
+    return res.status(200).json({
+      data: users,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to fetch users" });
+  }
+};
+
+export const getAllTasks = async (req: Request, res: Response) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [tasks, total] = await Promise.all([
+      Todo.find()
+        .populate("userId", "name email")
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Todo.countDocuments(),
+    ]);
+
+    res.json({
+      data: tasks,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch tasks" });
+  }
+};
+
+export const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    console.log("The user to delete", userId);
+
+    await User.findByIdAndDelete(userId);
+    await Todo.deleteMany({ userId });
+
+    res.json({ message: "User and their tasks deleted" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "Failed to delete user" });
+  }
+};
+
+export const deleteTask = async (req: Request, res: Response) => {
+  await Todo.findByIdAndDelete(req.params.taskId);
+  console.log("Deleted");
+  res.json({ message: "Task deleted" });
+};

@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import UserSettings from "./pages/UserSettings";
 import { useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -18,14 +19,33 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <Navigate to="/todos" /> : <>{children}</>;
 };
 
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) return <Navigate to="/login" />;
+
+  if (user?.role !== "admin") return <Navigate to="/todos" />;
+
+  return <>{children}</>;
+};
+
 function App() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   return (
     <div className="min-h-screen bg-background p-4">
       <Toaster position="top-center" richColors />
-
+      {isAuthenticated && <Navbar />}
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
+
+        <Route
+          path="/adminPanel"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
 
         <Route
           path="/login"
@@ -56,7 +76,6 @@ function App() {
           path="/todos"
           element={
             <ProtectedRoute>
-              <Navbar />
               <h1 className="text-2xl font-bold capitalize text-blue-500/80 mt-4 text-center">
                 Welcome, <i>{user?.name}!</i>
               </h1>

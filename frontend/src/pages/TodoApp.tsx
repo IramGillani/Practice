@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback } from "react";
 import { ArrowUpDown } from "lucide-react";
 
 import { TaskItem } from "@/components/TaskItem";
-import { DeleteModal } from "@/components/DeleteModal";
+import DeleteConfirmationModal from "@/components/DeleteModal";
 import TaskInput from "@/components/TaskInput";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -129,13 +129,17 @@ const TodoApp = () => {
 
           <TaskInput />
 
-          {taskToDeleteId && (
-            <DeleteModal
-              taskText={taskToDelete?.text || ""}
-              onConfirm={handleDeleteConfirm}
-              onCancel={() => setTaskToDeleteId(null)}
-            />
-          )}
+          <DeleteConfirmationModal
+            isOpen={!!taskToDeleteId}
+            onClose={() => setTaskToDeleteId(null)}
+            onConfirm={handleDeleteConfirm}
+            title="Delete Task"
+            description={
+              taskToDelete
+                ? `Are you sure you want to delete "${taskToDelete.text}"?`
+                : "Are you sure you want to delete this task?"
+            }
+          />
         </>
       )}
     </div>
