@@ -8,19 +8,19 @@ export const StatCards = ({ stats }: { stats: DashboardData["stats"] }) => {
   const items = [
     {
       label: "Total Users",
-      value: stats.totalUsers || 0,
+      value: stats.data.totalUsers || 0,
       icon: <Users size={20} className="text-blue-600" />,
       bgColor: "bg-blue-100",
     },
     {
       label: "Total Tasks",
-      value: stats.totalTasks || 0,
+      value: stats.data.totalTasks || 0,
       icon: <NotebookPen size={20} className="text-purple-600" />,
       bgColor: "bg-purple-100",
     },
     {
       label: "Completed Tasks",
-      value: `${stats.completedTasks || 0}`,
+      value: `${stats.data.completedTasks || 0}`,
       icon: <ListCheck size={20} className="text-green-600" />,
       bgColor: "bg-green-100",
     },

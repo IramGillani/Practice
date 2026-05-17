@@ -4,7 +4,9 @@ import type { Task } from "./Task";
 export interface DashboardData {
   users: User[];
   tasks: Task[];
-  stats: { totalUsers: number; totalTasks: number; completedTasks: number };
+  stats: {
+    data: { totalUsers: number; totalTasks: number; completedTasks: number };
+  };
   userPagination: Pagination;
   taskPagination: Pagination;
 }
@@ -15,6 +17,14 @@ export type Pagination = {
   totalItems: number;
 };
 
+export interface PaginatedResponse<T> {
+  data: T;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+  };
+}
 export type UserTableProps = {
   users: User[];
   onDeleteUser: (id: string) => void;
