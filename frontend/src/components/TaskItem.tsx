@@ -1,7 +1,8 @@
-import { memo } from "react";
+import { memo, useRef, useEffect } from "react";
 import { CheckCircle, Circle, FilePen, Trash2 } from "lucide-react";
 import { type Task } from "../types";
 import { Button } from "@/components/ui/button";
+import { useTask } from "@/context/TaskProvider";
 import { cn } from "@/lib/utils";
 import type { TaskAction } from "@/context/TaskReducer";
 
@@ -17,8 +18,22 @@ export const TaskItem = memo(
     onDeleteTrigger: (id: string) => void;
     onToggle: (id: string, completed: boolean) => void;
   }) => {
+    const { state } = useTask();
+    const elementRef = useRef<HTMLLIElement>(null);
+    useEffect(() => {
+      if (state.latestTaskId === task._id) {
+        elementRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+        dispatch({ type: "SET_LATEST_TASK", payload: null });
+      }
+    }, [task._id, state.latestTaskId]);
     return (
-      <li className="flex items-center justify-between p-3 bg-secondry/50 rounded-lg group transition-all">
+      <li
+        className="flex items-center justify-between p-3 bg-secondry/50 rounded-lg group transition-all"
+        ref={elementRef}
+      >
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"

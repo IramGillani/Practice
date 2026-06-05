@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, forwardRef } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Check, Plus, X, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,7 @@ const TaskInputSchema = yup
 
 type TaskFormValues = yup.InferType<typeof TaskInputSchema>;
 
-export default function TaskInput() {
+const TaskInput = forwardRef<HTMLInputElement, {}>((props, ref) => {
   const { state, dispatch } = useTask();
   const { editingId, tasks } = state;
 
@@ -32,6 +33,7 @@ export default function TaskInput() {
     formState: { errors, isSubmitting },
     reset,
     setValue,
+    setFocus,
   } = useForm<TaskFormValues>({
     resolver: yupResolver(TaskInputSchema),
     defaultValues: { text: taskToEdit?.text || "" },
@@ -40,13 +42,16 @@ export default function TaskInput() {
   useEffect(() => {
     if (taskToEdit) {
       setValue("text", taskToEdit.text);
+      setFocus("text");
     } else {
       reset({ text: "" });
     }
-  }, [taskToEdit, setValue, reset]);
+  }, [taskToEdit, setValue, reset, setFocus]);
 
   const onSubmit = async (data: TaskFormValues) => {
     try {
+      let targetTaskId: string | null = null;
+
       if (editingId) {
         const updated = await taskService.update(editingId, {
           text: data.text,
@@ -57,8 +62,28 @@ export default function TaskInput() {
       } else {
         const newTask = await taskService.create(data.text);
         dispatch({ type: "ADD_TASK", payload: newTask });
+
+        targetTaskId = newTask._id;
       }
+
       reset();
+
+      toast.success(editingId ? "Task Updated..." : "Task Created...", {
+        ...(!editingId && {
+          duration: 5000,
+          action: {
+            label: "View Task",
+            onClick: () => {
+              if (targetTaskId) {
+                dispatch({ type: "SET_LATEST_TASK", payload: targetTaskId });
+              }
+            },
+          },
+          classNames: {
+            actionButton: "!bg-green-800/80 text-white hover:bg-red-700",
+          },
+        }),
+      });
     } catch (error) {
       console.error("Submission failed:", error);
       dispatch({
@@ -121,4 +146,5 @@ export default function TaskInput() {
       </FieldGroup>
     </form>
   );
-}
+});
+export default TaskInput;

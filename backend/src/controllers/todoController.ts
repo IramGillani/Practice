@@ -3,18 +3,45 @@ import Todo from "../models/Todo";
 
 export const getTodos = async (req: Request, res: Response) => {
   try {
-    const todos = await Todo.find({ userId: req.user._id }).sort({
-      createdAt: -1,
-    });
-    console.log("👤 User ID:", req.user._id);
-    console.log(`✅ Fetched ${todos.length} tasks`);
+    const limit = parseInt(req.query.limit as string) || 6;
+    const skip = parseInt(req.query.skip as string) || 0;
 
-    res.status(200).json(todos);
+    const query = { userId: req.user._id };
+
+    const totalTasks = await Todo.countDocuments(query);
+
+    const todos = await Todo.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    console.log("👤 User ID:", req.user._id);
+    console.log(`✅ Fetched ${todos.length} tasks (skipped ${skip})`);
+
+    res.status(200).json({
+      tasks: todos,
+      hasMore: skip + todos.length < totalTasks,
+    });
   } catch (error) {
     console.error("❌ GET Error:", error);
     res.status(500).json({ message: "Server error while fetching tasks" });
   }
 };
+
+// export const getTodos = async (req: Request, res: Response) => {
+//   try {
+//     const todos = await Todo.find({ userId: req.user._id }).sort({
+//       createdAt: -1,
+//     });
+//     console.log("👤 User ID:", req.user._id);
+//     console.log(`✅ Fetched ${todos.length} tasks`);
+
+//     res.status(200).json(todos);
+//   } catch (error) {
+//     console.error("❌ GET Error:", error);
+//     res.status(500).json({ message: "Server error while fetching tasks" });
+//   }
+// };
 
 export const createTodo = async (req: Request, res: Response) => {
   try {

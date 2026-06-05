@@ -13,10 +13,9 @@ import { Trash2 } from "lucide-react";
 import type { TaskTableProps } from "@/types";
 
 export const TaskTable = ({ tasks, onDeleteTask }: TaskTableProps) => (
-  <Card>
+  <Card className="py-0">
     <CardHeader className="bg-muted/50 py-4 flex flex-row items-center justify-between space-y-0">
       <CardTitle className="text-base font-semibold">Task Management</CardTitle>
-      <Badge variant="secondary">{tasks.length} Total</Badge>
     </CardHeader>
     <div className="overflow-x-auto">
       <Table>

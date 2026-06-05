@@ -16,4 +16,7 @@ export interface TaskState {
   editingId: string | null;
   isLoading: boolean;
   error: string | null;
+  latestTaskId?: string | null;
+  isFetchingMore: boolean;
+  hasMore: boolean;
 }

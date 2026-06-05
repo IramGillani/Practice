@@ -65,17 +65,36 @@ export const getAllTasks = async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
     const search = req.query.search ? String(req.query.search).trim() : "";
 
-    const searchQuery = search
-      ? { text: { $regex: search, $options: "i" } }
+    let userIds: string[] = [];
+
+    if (search) {
+      const users = await User.find({
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
+      }).select("_id");
+
+      userIds = users.map((u) => u._id);
+    }
+
+    const taskQuery = search
+      ? {
+          $or: [
+            { text: { $regex: search, $options: "i" } },
+            { userId: { $in: userIds } },
+          ],
+        }
       : {};
 
     const [tasks, total] = await Promise.all([
-      Todo.find(searchQuery)
+      Todo.find(taskQuery)
         .populate("userId", "name email")
         .skip(skip)
         .limit(limit)
         .lean(),
-      Todo.countDocuments(searchQuery),
+
+      Todo.countDocuments(taskQuery),
     ]);
 
     return res.status(200).json({

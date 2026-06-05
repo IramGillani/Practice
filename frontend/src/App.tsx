@@ -30,9 +30,9 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen  bg-background p-4">
       <Toaster position="top-center" richColors />
       {isAuthenticated && <Navbar />}
       <Routes>
@@ -76,9 +76,6 @@ function App() {
           path="/todos"
           element={
             <ProtectedRoute>
-              <h1 className="text-2xl font-bold capitalize text-blue-500/80 mt-4 text-center">
-                Welcome, <i>{user?.name}!</i>
-              </h1>
               <TodoApp />
             </ProtectedRoute>
           }

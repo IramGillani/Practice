@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Search, Filter, RefreshCw } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,7 +7,9 @@ import DeleteConfirmationModal from "@/components/DeleteModal";
 import { UserTable } from "@/components/AdminComps/UserTable";
 import { TaskTable } from "@/components/AdminComps/TaskTable";
 import { StatCards } from "@/components/AdminComps/StatCards";
-import type { DashboardData } from "@/types";
+import type { DashboardData, TabType } from "@/types";
+
+import { TaskListSkeleton, UserListSkeleton } from "@/components/Skeletons";
 
 import { useNavigate } from "react-router-dom";
 import { adminService } from "@/api/adminApi";
@@ -28,41 +30,71 @@ const AdminDashboard = () => {
 
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const fetchDashboardData = async (
+  const [selectedTab, setSelectedTab] = useState<TabType>("Users");
+  const tabs: TabType[] = ["Users", "Tasks"];
+
+  const fetchStats = async () => {
+    console.log("Fetching stats API");
+    try {
+      const statsRes = await adminService.getDashboardStats();
+      setData((prev) => ({ ...prev, stats: { data: statsRes.data } }));
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
+
+  const fetchListData = async (
     userPage = 1,
     taskPage = 1,
     search = "",
+    currentTab = selectedTab,
   ) => {
+    console.log("API CALL", currentTab);
     setLoading(true);
     try {
-      const [statsRes, tasksRes, usersRes] = await Promise.all([
-        adminService.getDashboardStats(),
-        adminService.getAllTasks(taskPage, 10, search),
-        adminService.getAllUsers(userPage, 10, search),
-      ]);
-
-      setData((prev) => ({
-        ...prev,
-        stats: { data: statsRes.data },
-        users: usersRes.data,
-        tasks: tasksRes.data,
-        userPagination: usersRes.pagination,
-        taskPagination: tasksRes.pagination,
-      }));
+      if (currentTab === "Users") {
+        const usersRes = await adminService.getAllUsers(userPage, 10, search);
+        setData((prev) => ({
+          ...prev,
+          users: usersRes.data,
+          userPagination: usersRes.pagination,
+        }));
+      } else {
+        const tasksRes = await adminService.getAllTasks(taskPage, 10, search);
+        setData((prev) => ({
+          ...prev,
+          tasks: tasksRes.data,
+          taskPagination: tasksRes.pagination,
+        }));
+      }
     } catch (error) {
-      console.error("Error fetching admin data:", error);
+      console.error("Error fetching list data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log("Stats effect fired");
+    fetchStats();
+    console.log("Fetching stats data initially");
+  }, []);
+
+  useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      fetchDashboardData(1, 1, searchQuery);
+      console.log(
+        `Fetching data for tab: ${selectedTab} with search: "${searchQuery}"`,
+      );
+      fetchListData(1, 1, searchQuery, selectedTab);
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
+  }, [searchQuery, selectedTab]);
+
+  const handleTabChange = (tab: TabType) => {
+    setLoading(true);
+    setSelectedTab(tab);
+  };
 
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -96,6 +128,10 @@ const AdminDashboard = () => {
           tasks: prev.tasks.filter((t) => t._id !== id),
         }));
       }
+      await Promise.all([
+        fetchStats(),
+        // fetchListData(1, 1, searchQuery, selectedTab),
+      ]);
     } catch (error) {
       console.error(`Failed to delete ${type}:`, error);
     }
@@ -126,45 +162,48 @@ const AdminDashboard = () => {
         <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-50">
           Admin Overview
         </h1>
-        <Button
-          onClick={() =>
-            fetchDashboardData(
-              data.userPagination.currentPage,
-              data.taskPagination.currentPage,
-              searchQuery,
-            )
-          }
-          className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm hover:bg-gray-100 text-gray-700"
-        >
-          <RefreshCw size={18} />
-          Refresh
-        </Button>
       </header>
-      {loading ? (
-        <p className="text-center text-2xl text-blue-400">Loading...</p>
-      ) : (
-        <>
-          {" "}
-          <StatCards stats={data.stats} />
-          <Card className="my-6 py-2">
-            <CardContent className="p-4 flex flex-wrap gap-4 items-center">
-              <div className="relative flex-1 min-w-75">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search users or tasks..."
-                  className="pl-10 py-4"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              {/* <Button variant="outline">
-                <Filter className="mr-2 h-4 w-4" />
-                Filters
-              </Button> */}
-            </CardContent>
-          </Card>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div>
+      <StatCards stats={data.stats} />
+      <Card className="my-6 py-2">
+        <CardContent className="p-4 flex flex-wrap gap-4 items-center">
+          <div className="relative flex-1 min-w-75">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder={
+                selectedTab === "Users" ? "Search users..." : "Search tasks..."
+              }
+              className="pl-10 py-4"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+      <div className="flex gap-6 border-b mb-6">
+        {tabs.map((t) => (
+          <button
+            key={t}
+            onClick={() => handleTabChange(t)}
+            className={`pb-2 text-lg font-semibold transition-all ${
+              selectedTab === t
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="col-span-1 lg:col-span-2">
+          {loading ? (
+            selectedTab === "Users" ? (
+              <UserListSkeleton />
+            ) : (
+              <TaskListSkeleton />
+            )
+          ) : selectedTab === "Users" ? (
+            <>
               <UserTable
                 users={data.users}
                 onDeleteUser={(id) => openDeleteModal("user", id)}
@@ -172,34 +211,36 @@ const AdminDashboard = () => {
               <PaginationControls
                 pagination={data.userPagination}
                 onPageChange={(page) =>
-                  fetchDashboardData(
+                  fetchListData(
                     page,
                     data.taskPagination.currentPage,
                     searchQuery,
+                    "Users",
                   )
                 }
               />
-            </div>
-            <div>
+            </>
+          ) : (
+            <>
               <TaskTable
                 tasks={data.tasks}
                 onDeleteTask={(id) => openDeleteModal("task", id)}
               />
-
               <PaginationControls
                 pagination={data.taskPagination}
                 onPageChange={(page) =>
-                  fetchDashboardData(
+                  fetchListData(
                     data.userPagination.currentPage,
                     page,
                     searchQuery,
+                    "Tasks",
                   )
                 }
               />
-            </div>
-          </div>
-        </>
-      )}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

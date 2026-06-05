@@ -11,7 +11,9 @@ export type TaskAction =
   | { type: "START_EDIT"; payload: string | null }
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null }
-  | { type: "CLEAR_ERROR" };
+  | { type: "CLEAR_ERROR" }
+  | { type: "APPEND_TASKS"; payload: Task[] }
+  | { type: "SET_LATEST_TASK"; payload: string | null };
 
 export const taskReducer = (
   state: TaskState,
@@ -79,7 +81,20 @@ export const taskReducer = (
         ...state,
         isLoading: action.payload,
       };
+    case "SET_LATEST_TASK":
+      return { ...state, latestTaskId: action.payload };
 
+    case "APPEND_TASKS":
+      return {
+        ...state,
+        tasks: [
+          ...state.tasks,
+          ...action.payload.filter(
+            (newTask) =>
+              !state.tasks.some((oldTask) => oldTask._id === newTask._id),
+          ),
+        ],
+      };
     default:
       return state;
   }

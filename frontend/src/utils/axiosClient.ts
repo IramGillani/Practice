@@ -29,6 +29,7 @@ api.interceptors.response.use(
   (response) => {
     if (response.data) {
       response.data = transformDates(response.data);
+      response.data.message && toast.success(response.data.message);
     }
     return response;
   },

@@ -13,7 +13,7 @@ import { Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const UserTable = ({ users, onDeleteUser }: UserTableProps) => (
-  <Card>
+  <Card className="py-0">
     <CardHeader className="bg-muted/50 py-4">
       <CardTitle className="text-base font-semibold">User Management</CardTitle>
     </CardHeader>

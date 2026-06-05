@@ -34,3 +34,5 @@ export type TaskTableProps = {
   tasks: Task[];
   onDeleteTask: (id: string) => void;
 };
+
+export type TabType = "Users" | "Tasks";

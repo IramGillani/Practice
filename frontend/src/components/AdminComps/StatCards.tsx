@@ -29,7 +29,10 @@ export const StatCards = ({ stats }: { stats: DashboardData["stats"] }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {items.map((stat, i) => (
-        <Card key={i} className="border-b-4 border-b-slate-200">
+        <Card
+          key={i}
+          className="border-b-4 border-b-slate-200 dark:border-b-[#2d2e30]"
+        >
           <CardContent className="pt-6 flex flex-col items-center text-center">
             <div className={`p-3 ${stat.bgColor} rounded-full mb-4`}>
               {stat.icon}
