@@ -28,7 +28,7 @@ const userSchema = new Schema<IUser, {}, IUserMethods>(
           email: ret.email,
           role: ret.role,
           profileUrl: ret.profileUrl || "",
-          taskCount: ret.taskCount || "00",
+          taskCount: ret.taskCount || 0,
         };
       },
     },

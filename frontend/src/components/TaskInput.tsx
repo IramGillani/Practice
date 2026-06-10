@@ -74,6 +74,7 @@ const TaskInput = forwardRef<HTMLInputElement, {}>((props, ref) => {
           action: {
             label: "View Task",
             onClick: () => {
+              dispatch({ type: "SET_FILTER", payload: "all" });
               if (targetTaskId) {
                 dispatch({ type: "SET_LATEST_TASK", payload: targetTaskId });
               }

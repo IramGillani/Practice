@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { authService } from "@/api/authApi";
 import { Input } from "@/components/ui/input";
+import { PasswordField } from "@/components/PasswordField";
 import {
   Form,
   FormControl,
@@ -52,45 +53,55 @@ export function Signup() {
     <div className="max-w-md mx-auto mt-10 p-6 border rounded-lg bg-card">
       <h2 className="text-2xl font-bold mb-6 text-center">Create Account</h2>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Your Name" {...field} />
-                </FormControl>
-                <FormMessage name="name" />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="text" placeholder="Email" {...field} />
-                </FormControl>
-                <FormMessage name="email" />
-              </FormItem>
-            )}
-          />
-          <FormField
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="min-h-20">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-700 dark:text-slate-300 font-medium">
+                    Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Your Name"
+                      {...field}
+                      className="mb-0"
+                    />
+                  </FormControl>
+                  <FormMessage name="name" />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="min-h-20">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-700 dark:text-slate-300 font-medium">
+                    Email
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Email"
+                      {...field}
+                      className="mb-0"
+                    />
+                  </FormControl>
+                  <FormMessage name="email" />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <PasswordField
             control={form.control}
             name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="******" {...field} />
-                </FormControl>
-                <FormMessage name="password" />
-              </FormItem>
-            )}
+            label="Password"
           />
           <Button type="submit" className="w-full">
             Register

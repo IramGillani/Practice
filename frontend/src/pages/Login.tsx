@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { loginSchema, type LoginFormValues } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import { PasswordField } from "@/components/PasswordField";
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -63,43 +64,39 @@ export function LoginForm() {
       <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           {serverError && (
             <Alert variant="destructive">
               <AlertDescription>{serverError}</AlertDescription>
             </Alert>
           )}
+          <div className="min-h-21">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-700 dark:text-slate-300 font-medium">
+                    Email
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="email@example.com"
+                      {...field}
+                      className="mb-0"
+                    />
+                  </FormControl>
+                  <FormMessage name="email" />
+                </FormItem>
+              )}
+            />
+          </div>
 
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    placeholder="email@example.com"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage name="email" />
-              </FormItem>
-            )}
-          />
-
-          <FormField
+          <PasswordField
             control={form.control}
             name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="******" {...field} />
-                </FormControl>
-                <FormMessage name="password" />
-              </FormItem>
-            )}
+            label="Password"
           />
 
           <Button type="submit" className="w-full">

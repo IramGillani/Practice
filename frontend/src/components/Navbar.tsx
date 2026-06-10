@@ -1,6 +1,7 @@
 import { User, Settings, LogOut, Moon, Sun } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { LayoutDashboard } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import {
   DropdownMenu,
@@ -23,7 +24,9 @@ const Navbar = () => {
 
   return (
     <nav className="flex justify-between items-center p-4 bg-white dark:bg-gray-900 border-b shadow-sm">
-      <h1 className="text-xl font-bold text-blue-600">GoalSnap</h1>
+      <Link to="/" className="text-xl font-bold text-blue-600">
+        GoalSnap
+      </Link>
       <div className="flex gap-2 items-center">
         <Button
           onClick={toggleTheme}
