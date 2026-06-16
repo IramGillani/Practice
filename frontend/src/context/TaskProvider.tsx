@@ -4,7 +4,6 @@ import React, {
   useEffect,
   useContext,
   useState,
-  useCallback,
 } from "react";
 import type { TaskState } from "@/types";
 import { taskReducer } from "./TaskReducer";
@@ -50,7 +49,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         dispatch({ type: "SET_LOADING", payload: true });
         const data = await taskService.getAll(6, 0);
-        console.log("Initial tasks loaded:", data);
+
         dispatch({ type: "SET_TASKS", payload: data.tasks });
         setHasMore(data.hasMore);
       } catch (err) {
@@ -73,7 +72,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
       setIsFetchingMore(true);
       const currentSkip = state.tasks.length;
       const data = await taskService.getAll(6, currentSkip);
-      console.log("Loaded more tasks:", data);
+
       dispatch({ type: "APPEND_TASKS", payload: data.tasks });
       setHasMore(data.hasMore);
     } catch (err) {

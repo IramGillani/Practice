@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useNavigate, Link } from "react-router-dom"; // Added Link
+import { useNavigate, Link } from "react-router-dom";
 import { authService } from "@/api/authApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import {
   Form,
@@ -21,7 +19,6 @@ import { PasswordField } from "@/components/PasswordField";
 
 export function LoginForm() {
   const navigate = useNavigate();
-  const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<LoginFormValues>({
     resolver: yupResolver(loginSchema),
@@ -35,28 +32,12 @@ export function LoginForm() {
   const { login } = useAuth();
 
   const onSubmit = async (data: LoginFormValues) => {
-    setServerError(null);
-
     try {
       const response = await authService.login(data as LoginFormValues);
       console.log("Login successful:", response);
       login(response.user, response.accessToken, response.refreshToken);
       navigate("/todos");
-    } catch (error: any) {
-      const status = error.response?.status;
-      console.log(status);
-
-      if (status === 404) {
-        setServerError("Account not found. Redirecting to signup...");
-        setTimeout(() => navigate("/signup"), 2000);
-      } else if (status === 401) {
-        setServerError("Invalid credentials. Please try again.");
-      } else {
-        setServerError(
-          error.response?.data?.message || "An unexpected error occurred.",
-        );
-      }
-    }
+    } catch (error: any) {}
   };
 
   return (
@@ -65,11 +46,6 @@ export function LoginForm() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          {serverError && (
-            <Alert variant="destructive">
-              <AlertDescription>{serverError}</AlertDescription>
-            </Alert>
-          )}
           <div className="min-h-21">
             <FormField
               control={form.control}
@@ -99,7 +75,7 @@ export function LoginForm() {
             label="Password"
           />
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full hover:cursor-pointer">
             Sign In
           </Button>
 

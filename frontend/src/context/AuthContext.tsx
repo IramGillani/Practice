@@ -5,7 +5,6 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { toast } from "sonner";
 
 import { AUTH_KEYS } from "@/types";
 import { authService } from "@/api/authApi";
@@ -47,7 +46,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem(AUTH_KEYS.USER);
 
       setUser(null);
-      toast.success("Logged out successfully");
       navigate("/login");
     }
   };

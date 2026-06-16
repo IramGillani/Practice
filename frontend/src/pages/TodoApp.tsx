@@ -30,7 +30,6 @@ const TodoApp = () => {
     const target = observerTarget.current;
     if (!target) return;
 
-    console.log("The target:", target);
     const observer = new IntersectionObserver(
       (entries) => {
         if (
@@ -47,7 +46,6 @@ const TodoApp = () => {
         rootMargin: "150px",
       },
     );
-    console.log("Observer set on target:", observer);
     observer.observe(target);
     return () => {
       if (target) observer.unobserve(target);

@@ -127,7 +127,17 @@ export const deleteUser = async (req: Request, res: Response) => {
 };
 
 export const deleteTask = async (req: Request, res: Response) => {
-  await Todo.findByIdAndDelete(req.params.taskId);
-  console.log("Deleted");
-  res.json({ message: "Task deleted" });
+  try {
+    const deletedTask = await Todo.findByIdAndDelete(req.params.taskId);
+
+    if (!deletedTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    console.log("Deleted");
+    return res.status(200).json({ message: "Task deleted" });
+  } catch (error) {
+    console.error("Error deleting task:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };

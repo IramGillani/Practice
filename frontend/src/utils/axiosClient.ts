@@ -38,7 +38,11 @@ api.interceptors.response.use(
       _retry?: boolean;
     };
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes("/login")
+    ) {
       originalRequest._retry = true;
 
       try {
@@ -82,6 +86,7 @@ api.interceptors.response.use(
       "An unknown error occurred";
     console.error(`❌ API Error:`, errorMessage);
     toast.error(errorMessage);
+
     return Promise.reject(error);
   },
 );

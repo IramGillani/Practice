@@ -34,7 +34,6 @@ const AdminDashboard = () => {
   const tabs: TabType[] = ["Users", "Tasks"];
 
   const fetchStats = async () => {
-    console.log("Fetching stats API");
     try {
       const statsRes = await adminService.getDashboardStats();
       setData((prev) => ({ ...prev, stats: { data: statsRes.data } }));
@@ -47,9 +46,8 @@ const AdminDashboard = () => {
     userPage = 1,
     taskPage = 1,
     search = "",
-    currentTab = selectedTab,
+    currentTab: TabType = selectedTab,
   ) => {
-    console.log("API CALL", currentTab);
     setLoading(true);
     try {
       if (currentTab === "Users") {
@@ -75,15 +73,19 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    console.log("Stats effect fired");
     fetchStats();
-    console.log("Fetching stats data initially");
   }, []);
 
   useEffect(() => {
     if (searchQuery.length > 0 && searchQuery.trim() === "") {
       return;
     }
+
+    // if (searchQuery === "") {
+    //   fetchListData(1, 1, "", selectedTab);
+    //   return;
+    // }
+
     const delayDebounceFn = setTimeout(() => {
       console.log(
         `Fetching data for tab: ${selectedTab} with search: "${searchQuery}"`,
