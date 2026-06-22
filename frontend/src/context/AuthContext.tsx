@@ -10,6 +10,14 @@ import { AUTH_KEYS } from "@/types";
 import { authService } from "@/api/authApi";
 import type { AuthContextType, User } from "@/types";
 import { useNavigate } from "react-router-dom";
+import {
+  signInWithPopup,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+} from "firebase/auth";
+import { auth } from "../services/firebase";
+import type { Provider } from "@/types";
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -20,12 +28,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (userData: User, accessToken: string, refreshToken: string) => {
     localStorage.setItem(AUTH_KEYS.ACCESS, accessToken);
     localStorage.setItem(AUTH_KEYS.REFRESH, refreshToken);
-    console.log(
-      "accessToken, userData and refreshToken:",
-      accessToken,
-      userData,
-      refreshToken,
-    );
 
     localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(userData));
     setUser(userData);
@@ -64,6 +66,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
+  const handleSocialLogin = async (providerName: Provider) => {
+    const provider =
+      providerName === "google"
+        ? new GoogleAuthProvider()
+        : new GithubAuthProvider();
+
+    try {
+      setIsLoading(true);
+      console.log(`Initiating ${provider} authentication...`);
+      const result = await signInWithPopup(auth, provider);
+      //const result = await signInWithRedirect(auth, provider);
+
+      const firebaseUser = result.user;
+
+      const idToken = await firebaseUser.getIdToken(true);
+
+      const res = await authService.socialLogin(idToken);
+
+      localStorage.setItem(AUTH_KEYS.ACCESS, res.accessToken);
+      localStorage.setItem(AUTH_KEYS.REFRESH, res.refreshToken);
+
+      localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(res.user));
+      setUser(res.user);
+
+      navigate("/todos");
+      return user;
+    } catch (err: any) {
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const updateUserData = (updatedUser: User) => {
     setUser(updatedUser);
     localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(updatedUser));
@@ -99,6 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateUserData,
         isAuthenticated: !!user,
         isLoading,
+        handleSocialLogin,
       }}
     >
       {!isLoading && children}

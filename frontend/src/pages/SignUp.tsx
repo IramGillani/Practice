@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { authService } from "@/api/authApi";
 import { Input } from "@/components/ui/input";
 import { PasswordField } from "@/components/PasswordField";
+import { SocialLoginButton } from "@/components/SocialLoginBtn";
+
 import {
   Form,
   FormControl,
@@ -13,10 +15,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { signupSchema, type SignupFormValues, type User } from "@/types";
+import { signupSchema, type SignupFormValues } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 
 export function Signup() {
+  const { handleSocialLogin } = useAuth();
   const { login } = useAuth();
   const navigate = useNavigate();
   const form = useForm<SignupFormValues>({
@@ -106,6 +109,24 @@ export function Signup() {
           <Button type="submit" className="w-full">
             Register
           </Button>
+          <div className="relative my-4 flex items-center justify-center py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-muted" />
+            </div>
+            <span className="relative bg-card px-3 text-xs uppercase text-muted-foreground">
+              Or
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <SocialLoginButton
+              provider="google"
+              onClick={() => handleSocialLogin("google")}
+            />
+            <SocialLoginButton
+              provider="github"
+              onClick={() => handleSocialLogin("github")}
+            />
+          </div>
           <Button
             type="button"
             variant="link"

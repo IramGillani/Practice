@@ -16,6 +16,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   updateUserData: (userData: User) => void;
   isLoading: boolean;
+  handleSocialLogin: (provider: Provider) => void;
 }
 
 export const loginSchema = yup.object({
@@ -69,3 +70,10 @@ export const passwordSchema = yup.object({
 });
 
 export type PasswordFormValues = yup.InferType<typeof passwordSchema>;
+
+export type Provider = "google" | "github";
+
+export interface SocialLoginPayload {
+  token: string;
+  // provider: Provider;
+}

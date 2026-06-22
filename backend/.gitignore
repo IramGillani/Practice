@@ -2,3 +2,5 @@
 **/.env
 **/.vite
 **/dist
+
+serviceAccountKey.json

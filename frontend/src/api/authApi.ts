@@ -20,6 +20,14 @@ export const authService = {
       data: credentials,
     }),
 
+  socialLogin: (firebaseToken: string) =>
+    apiRequest<AuthResponse>(`${BASE_PATH}/social-login`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${firebaseToken}`,
+      },
+    }),
+
   logout: (refreshToken: string) => {
     return apiRequest<{ message: string }>(`${BASE_PATH}/logout`, {
       method: "POST",

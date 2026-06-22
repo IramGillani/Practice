@@ -16,9 +16,11 @@ import {
 import { loginSchema, type LoginFormValues } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { PasswordField } from "@/components/PasswordField";
+import { SocialLoginButton } from "@/components/SocialLoginBtn";
 
 export function LoginForm() {
   const navigate = useNavigate();
+  const { handleSocialLogin } = useAuth();
 
   const form = useForm<LoginFormValues>({
     resolver: yupResolver(loginSchema),
@@ -78,6 +80,24 @@ export function LoginForm() {
           <Button type="submit" className="w-full hover:cursor-pointer">
             Sign In
           </Button>
+          <div className="relative my-4 flex items-center justify-center py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-muted" />
+            </div>
+            <span className="relative bg-card px-3 text-xs uppercase text-muted-foreground">
+              Or
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <SocialLoginButton
+              provider="google"
+              onClick={() => handleSocialLogin("google")}
+            />
+            <SocialLoginButton
+              provider="github"
+              onClick={() => handleSocialLogin("github")}
+            />
+          </div>
 
           <div className="mt-4 text-center text-sm">
             <span className="text-muted-foreground">
