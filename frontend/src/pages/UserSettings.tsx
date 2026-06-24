@@ -99,7 +99,6 @@ export const SettingsPage = () => {
       }
       return URL.createObjectURL(file);
     });
-    // console.log("Preview Url", previewUrl);
   };
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -120,7 +119,6 @@ export const SettingsPage = () => {
     e.preventDefault();
     setIsDragging(false);
 
-    // console.log("DataTransfer obj", e.dataTransfer.files);
     const file = e.dataTransfer.files?.[0];
     if (file) {
       processFile(file);

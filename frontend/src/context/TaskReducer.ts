@@ -12,6 +12,8 @@ export type TaskAction =
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null }
   | { type: "CLEAR_ERROR" }
+  | { type: "SET_HAS_MORE"; payload: boolean }
+  | { type: "SET_FETCHING_MORE"; payload: boolean }
   | { type: "APPEND_TASKS"; payload: Task[] }
   | { type: "SET_LATEST_TASK"; payload: string | null };
 
@@ -81,6 +83,10 @@ export const taskReducer = (
         ...state,
         isLoading: action.payload,
       };
+    case "SET_HAS_MORE":
+      return { ...state, hasMore: action.payload };
+    case "SET_FETCHING_MORE":
+      return { ...state, isFetchingMore: action.payload };
     case "SET_LATEST_TASK":
       return { ...state, latestTaskId: action.payload };
 

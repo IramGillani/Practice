@@ -36,7 +36,6 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormValues) => {
     try {
       const response = await authService.login(data as LoginFormValues);
-      console.log("Login successful:", response);
       login(response.user, response.accessToken, response.refreshToken);
       navigate("/todos");
     } catch (error: any) {}
@@ -76,6 +75,16 @@ export function LoginForm() {
             name="password"
             label="Password"
           />
+
+          <div className="flex justify-end mb-4">
+            <Button
+              variant="link"
+              className="p-0 h-auto font-normal text-xs text-muted-foreground hover:text-primary"
+              asChild
+            >
+              <Link to="/forgot-password">Forgot password?</Link>
+            </Button>
+          </div>
 
           <Button type="submit" className="w-full hover:cursor-pointer">
             Sign In

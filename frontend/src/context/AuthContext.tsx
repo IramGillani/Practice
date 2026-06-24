@@ -5,6 +5,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
 
 import { AUTH_KEYS } from "@/types";
 import { authService } from "@/api/authApi";
@@ -76,7 +77,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       console.log(`Initiating ${provider} authentication...`);
       const result = await signInWithPopup(auth, provider);
-      //const result = await signInWithRedirect(auth, provider);
 
       const firebaseUser = result.user;
 
@@ -91,8 +91,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(res.user);
 
       navigate("/todos");
-      return user;
+      return res.user;
     } catch (err: any) {
+      if (err.code === "auth/popup-closed-by-user") {
+        toast.error("Login popup was closed before completing authentication.");
+        console.error("Social login failed", err);
+        return;
+      }
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUserData = (updatedUser: User) => {
     setUser(updatedUser);
     localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(updatedUser));
-    console.log("updatedUser", user);
   };
 
   // useEffect(() => {

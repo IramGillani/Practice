@@ -87,9 +87,6 @@ const AdminDashboard = () => {
     // }
 
     const delayDebounceFn = setTimeout(() => {
-      console.log(
-        `Fetching data for tab: ${selectedTab} with search: "${searchQuery}"`,
-      );
       fetchListData(1, 1, searchQuery, selectedTab);
     }, 500);
 

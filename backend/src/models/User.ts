@@ -55,7 +55,6 @@ userSchema.pre("save", async function () {
         try {
           await fs.access(oldImagePath);
           await fs.unlink(oldImagePath);
-          console.log("Deleted old profile image:", oldImagePath);
         } catch (fileErr) {
           console.warn(
             "File already missing or inaccessible, skipping unlink.",

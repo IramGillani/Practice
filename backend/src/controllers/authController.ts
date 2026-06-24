@@ -23,7 +23,6 @@ export const signup = async (req: Request, res: Response) => {
     }
 
     const user = await User.create({ name, email, password });
-    console.log("✨ User Created:", user);
 
     return sendAuthResponse(res, user, 201);
   } catch (err: unknown) {
@@ -36,17 +35,11 @@ export const signup = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    console.log("🔍 User Found:", email);
+
     const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(404).json({ message: "Account not found" });
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      console.log(isMatch);
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ message: "Invalid email or password" });
     }
     return sendAuthResponse(res, user, 200);
   } catch (err) {

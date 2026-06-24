@@ -32,7 +32,6 @@ export const updateInfo = async (req: Request, res: Response) => {
       user: user,
     });
   } catch (err) {
-    console.log("update user info error", err);
     return res.status(500).json({ message: "Error updating user info" });
   }
 };

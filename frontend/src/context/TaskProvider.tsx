@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useReducer,
-  useEffect,
-  useContext,
-  useState,
-} from "react";
+import React, { createContext, useReducer, useEffect, useContext } from "react";
 import type { TaskState } from "@/types";
 import { taskReducer } from "./TaskReducer";
 import { taskService } from "@/api/taskApi";
@@ -33,25 +27,24 @@ const TaskContext = createContext<TaskContextType | undefined>(undefined);
 export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
   const [state, dispatch] = useReducer(taskReducer, initialState);
-  const [hasMore, setHasMore] = useState(true);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const PAGE_SIZE = 6;
 
   useEffect(() => {
     if (!isAuthenticated) {
       dispatch({ type: "SET_TASKS", payload: [] });
       dispatch({ type: "SET_ERROR", payload: null });
       dispatch({ type: "SET_LOADING", payload: false });
-      setHasMore(true);
+      dispatch({ type: "SET_HAS_MORE", payload: true });
       return;
     }
 
     const init = async () => {
       try {
         dispatch({ type: "SET_LOADING", payload: true });
-        const data = await taskService.getAll(6, 0);
+        const data = await taskService.getAll(PAGE_SIZE, 0);
 
         dispatch({ type: "SET_TASKS", payload: data.tasks });
-        setHasMore(data.hasMore);
+        dispatch({ type: "SET_HAS_MORE", payload: data.hasMore });
       } catch (err) {
         console.error("Initialization error:", err);
         dispatch({
@@ -66,19 +59,19 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
   }, [isAuthenticated]);
 
   const loadMoreTasks = async () => {
-    if (isFetchingMore || !hasMore) return;
+    if (state.isFetchingMore || !state.hasMore) return;
 
     try {
-      setIsFetchingMore(true);
+      dispatch({ type: "SET_FETCHING_MORE", payload: true });
       const currentSkip = state.tasks.length;
-      const data = await taskService.getAll(6, currentSkip);
+      const data = await taskService.getAll(PAGE_SIZE, currentSkip);
 
       dispatch({ type: "APPEND_TASKS", payload: data.tasks });
-      setHasMore(data.hasMore);
+      dispatch({ type: "SET_HAS_MORE", payload: data.hasMore });
     } catch (err) {
       console.error("Error loading more tasks:", err);
     } finally {
-      setIsFetchingMore(false);
+      dispatch({ type: "SET_FETCHING_MORE", payload: false });
     }
   };
 

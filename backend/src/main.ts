@@ -1,4 +1,5 @@
 import dns from "node:dns";
+// Added to fix MongoDB Atlas SRV resolution failures in some network environments.
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 import express, { Application } from "express";
 import cors from "cors";
@@ -16,7 +17,12 @@ import path from "path";
 app.use("/profile", express.static(path.join(__dirname, "../public/profile")));
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // Routes
@@ -36,7 +42,7 @@ const startServer = async () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
-    // console.error("Failed to start server:", error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   }
 };

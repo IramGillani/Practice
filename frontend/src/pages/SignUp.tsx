@@ -31,7 +31,6 @@ export function Signup() {
   const onSubmit = async (data: SignupFormValues) => {
     try {
       const response = await authService.signup(data);
-      console.log("✅ Signup successful:", response);
       login(response.user, response.accessToken, response.refreshToken);
 
       navigate("/todos");
