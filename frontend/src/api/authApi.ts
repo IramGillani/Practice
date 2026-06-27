@@ -34,6 +34,17 @@ export const authService = {
       data: { token: refreshToken },
     });
   },
+  forgotPassword: (email: string) =>
+    apiRequest<AuthResponse>(`${BASE_PATH}/forgot-password`, {
+      method: "POST",
+      data: { email },
+    }),
+
+  resetPassword: (payload: Record<string, string>) =>
+    apiRequest<AuthResponse>(`${BASE_PATH}/reset-password`, {
+      method: "POST",
+      data: payload,
+    }),
 
   // getProfile: () =>
   //   apiRequest<User>(`${BASE_PATH}/profile`, {

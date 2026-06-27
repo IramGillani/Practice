@@ -7,6 +7,8 @@ import UserSettings from "./pages/UserSettings";
 import { useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import AdminDashboard from "./pages/AdminDashboard";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -60,6 +62,23 @@ function App() {
           element={
             <AuthRoute>
               <Signup />
+            </AuthRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <AuthRoute>
+              <ForgotPassword />
+            </AuthRoute>
+          }
+        />
+
+        <Route
+          path="/reset-password"
+          element={
+            <AuthRoute>
+              <ResetPassword />
             </AuthRoute>
           }
         />

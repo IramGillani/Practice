@@ -75,5 +75,11 @@ export type Provider = "google" | "github";
 
 export interface SocialLoginPayload {
   token: string;
-  // provider: Provider;
+}
+
+export interface SuccessPageProps {
+  heading: string;
+  desc: string;
+  buttonText?: string;
+  buttonLink?: string;
 }

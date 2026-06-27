@@ -16,6 +16,10 @@ const userSchema = new Schema<IUser, {}, IUserMethods>(
     role: { type: String, enum: ["user", "admin"], default: "user" },
     refreshToken: { type: String, default: null },
     profile: { type: String },
+    isSocialLogin: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

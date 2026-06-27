@@ -9,6 +9,7 @@ export interface IUser {
   profile: string;
   profileUrl?: string;
   taskCount?: number;
+  isSocialLogin: boolean;
 }
 
 export interface UserResponse {
@@ -18,4 +19,9 @@ export interface UserResponse {
   role: string;
   profileUrl: string;
   taskCount?: number;
+}
+
+export interface EmailParams {
+  email: string;
+  resetLink: string;
 }
