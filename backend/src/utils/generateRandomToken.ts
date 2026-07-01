@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
 export const cryptoUtil = {
-  generateResetToken: (): string => {
+  generateRandomToken: (): string => {
     return crypto.randomBytes(32).toString("hex");
   },
 

@@ -10,6 +10,7 @@ export interface IUser {
   profileUrl?: string;
   taskCount?: number;
   isSocialLogin: boolean;
+  isVerified: boolean;
 }
 
 export interface UserResponse {
@@ -19,9 +20,15 @@ export interface UserResponse {
   role: string;
   profileUrl: string;
   taskCount?: number;
+  isVerified: boolean;
+}
+export enum EmailType {
+  PASSWORD_RESET = "PASSWORD_RESET",
+  EMAIL_VERIFICATION = "EMAIL_VERIFICATION",
 }
 
 export interface EmailParams {
   email: string;
-  resetLink: string;
+  link: string;
+  type: EmailType;
 }

@@ -18,12 +18,12 @@ const SuccessPage = ({
         </div>
         <h1 className="text-2xl font-extrabold text-gray-900">{heading}</h1>
         <p className="text-sm text-gray-600">{desc}</p>
-        <Link
-          to={`/${buttonLink}`}
+        <a
+          href={`/${buttonLink}`}
           className="inline-block px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700"
         >
           Go to {buttonText}
-        </Link>
+        </a>
       </div>
     </div>
   );

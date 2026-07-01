@@ -20,6 +20,7 @@ const userSchema = new Schema<IUser, {}, IUserMethods>(
       type: Boolean,
       default: false,
     },
+    isVerified: { type: Boolean, default: false },
   },
   {
     timestamps: true,
@@ -33,6 +34,7 @@ const userSchema = new Schema<IUser, {}, IUserMethods>(
           role: ret.role,
           profileUrl: ret.profileUrl || "",
           taskCount: ret.taskCount || 0,
+          isVerified: ret.isVerified,
         };
       },
     },

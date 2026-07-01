@@ -9,6 +9,8 @@ import Navbar from "./components/Navbar";
 import AdminDashboard from "./pages/AdminDashboard";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
+import SignupSuccessPage from "./pages/SignupSuccessPage";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -16,9 +18,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
-  return isAuthenticated ? <Navigate to="/todos" /> : <>{children}</>;
+  if (isAuthenticated) {
+    if (user && !user.isVerified) {
+      return <Navigate to="/signupSuccess" replace />;
+    }
+
+    return <Navigate to="/todos" replace />;
+  }
+
+  return <>{children}</>;
 };
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -82,6 +92,9 @@ function App() {
             </AuthRoute>
           }
         />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+
+        <Route path="/signupSuccess" element={<SignupSuccessPage />} />
 
         <Route
           path="/settings"

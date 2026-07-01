@@ -103,6 +103,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const handleResendEmail = async (email: string) => {
+    if (!email) {
+      toast.error("No email address found to resend verification link.");
+      return;
+    }
+
+    try {
+      await authService.resendVerification(email);
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
   const updateUserData = (updatedUser: User) => {
     setUser(updatedUser);
     localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(updatedUser));
@@ -138,6 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: !!user,
         isLoading,
         handleSocialLogin,
+        handleResendEmail,
       }}
     >
       {!isLoading && children}

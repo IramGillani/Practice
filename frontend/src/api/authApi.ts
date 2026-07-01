@@ -4,7 +4,7 @@ import {
   type LoginFormValues,
   type SignupFormValues,
 } from "@/types";
-
+import type { VerifyEmailPayload } from "@/types";
 const BASE_PATH = "users";
 
 export const authService = {
@@ -44,6 +44,16 @@ export const authService = {
     apiRequest<AuthResponse>(`${BASE_PATH}/reset-password`, {
       method: "POST",
       data: payload,
+    }),
+  verifyEmail: (payload: VerifyEmailPayload) =>
+    apiRequest<AuthResponse>(`${BASE_PATH}/verify-email`, {
+      method: "POST",
+      data: payload,
+    }),
+  resendVerification: (email: string) =>
+    apiRequest<AuthResponse>(`${BASE_PATH}/resend-verification`, {
+      method: "POST",
+      data: { email },
     }),
 
   // getProfile: () =>

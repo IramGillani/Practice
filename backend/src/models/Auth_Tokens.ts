@@ -1,12 +1,14 @@
 import { Schema, model, Document, Types } from "mongoose";
+import { EmailType } from "../types/User";
 
-export interface IPassword_Reset extends Document {
+export interface IAuth_Tokens extends Document {
   userId: Types.ObjectId;
   token: string;
   createdAt: Date;
+  type: string;
 }
 
-const Password_ResetSchema = new Schema<IPassword_Reset>({
+const Auth_TokensSchema = new Schema<IAuth_Tokens>({
   userId: {
     type: Schema.Types.ObjectId,
     ref: "User",
@@ -18,6 +20,11 @@ const Password_ResetSchema = new Schema<IPassword_Reset>({
     required: true,
     index: true,
   },
+  type: {
+    type: String,
+
+    enum: EmailType,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -25,7 +32,7 @@ const Password_ResetSchema = new Schema<IPassword_Reset>({
   },
 });
 
-export const Password_Reset = model<IPassword_Reset>(
-  "Password_Reset",
-  Password_ResetSchema,
+export const Auth_Tokens = model<IAuth_Tokens>(
+  "Auth_Tokens",
+  Auth_TokensSchema,
 );

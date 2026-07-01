@@ -19,21 +19,22 @@ import { signupSchema, type SignupFormValues } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 
 export function Signup() {
-  const { handleSocialLogin } = useAuth();
-  const { login } = useAuth();
+  const { login, handleSocialLogin } = useAuth();
   const navigate = useNavigate();
   const form = useForm<SignupFormValues>({
     resolver: yupResolver(signupSchema),
     mode: "onTouched",
     defaultValues: { name: "", email: "", password: "" },
   });
+  const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: SignupFormValues) => {
     try {
       const response = await authService.signup(data);
+      navigate("/signupSuccess", {
+        replace: true,
+      });
       login(response.user, response.accessToken, response.refreshToken);
-
-      navigate("/todos");
     } catch (error: any) {
       const status = error.response?.status;
 
@@ -105,7 +106,7 @@ export function Signup() {
             name="password"
             label="Password"
           />
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
             Register
           </Button>
           <div className="relative my-4 flex items-center justify-center py-2">

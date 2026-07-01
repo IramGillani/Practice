@@ -7,6 +7,7 @@ import {
   deleteTask,
   getDashboardData,
 } from "../controllers/adminController.js";
+import { requireVerifiedEmail } from "../middlewares/verify-email.js";
 
 import { authenticateToken } from "../middlewares/auth.js";
 import { isAdmin } from "../middlewares/roleMiddleware.js";
@@ -18,7 +19,7 @@ router.use(isAdmin);
 router.get("/dashboard", getDashboardData);
 router.get("/users", getAllUsers);
 router.get("/tasks", getAllTasks);
-
+router.use(requireVerifiedEmail);
 router.delete("/users/:userId", deleteUser);
 router.delete("/tasks/:taskId", deleteTask);
 

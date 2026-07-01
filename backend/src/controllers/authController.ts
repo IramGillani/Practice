@@ -1,13 +1,15 @@
 import User from "../models/User";
 import { Request, Response } from "express";
+import { EmailType } from "../types";
 
 import jwt from "jsonwebtoken";
-import { cryptoUtil } from "../utils/generateResetToken";
+import { cryptoUtil } from "../utils/generateRandomToken";
 import { sendAuthResponse } from "../utils/authHelper";
 import { adminAuth } from "../config/firebase";
 
 import { generateTokens } from "../utils/generateToken";
-import { Password_Reset } from "../models/Password-reset";
+
+import { Auth_Tokens } from "../models/Auth_Tokens";
 import { sendEmail } from "../utils/sendEmail";
 
 export const signup = async (req: Request, res: Response) => {
@@ -25,13 +27,35 @@ export const signup = async (req: Request, res: Response) => {
       return res.status(409).json({ message: "Email already registered" });
     }
 
-    const user = await User.create({ name, email, password });
+    const user = await User.create({
+      name,
+      email,
+      password,
+      isVerified: false,
+    });
+
+    const rawToken = cryptoUtil.generateRandomToken();
+
+    const hashedToken = cryptoUtil.hashToken(rawToken);
+
+    await Auth_Tokens.deleteMany({
+      userId: user._id,
+      type: "EMAIL_VERIFICATION",
+    });
+
+    await Auth_Tokens.create({
+      userId: user._id,
+      token: hashedToken,
+      type: "EMAIL_VERIFICATION",
+    });
+
+    const link = `${process.env.CLIENT_URL}verify-email?token=${rawToken}&email=${encodeURIComponent(email)}`;
+
+    await sendEmail({ email, link, type: EmailType.EMAIL_VERIFICATION });
 
     return sendAuthResponse(res, user, 201);
   } catch (err: unknown) {
-    const errorMessage =
-      err instanceof Error ? err.message : "Internal Server Error";
-    res.status(500).json({ message: errorMessage });
+    res.status(500).json({ message: err });
   }
 };
 
@@ -56,7 +80,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
     return sendAuthResponse(res, user, 200);
-  } catch (err) {
+  } catch (err: unknown) {
     res.status(500).json({ message: "Server error during login" });
   }
 };
@@ -76,7 +100,7 @@ export const logout = async (req: Request, res: Response) => {
     await User.findByIdAndUpdate(decoded._id, { refreshToken: null });
 
     res.json({ message: "Logged out successfully" });
-  } catch (err) {
+  } catch (err: unknown) {
     res.status(200).json({ message: "Session already cleared" });
   }
 };
@@ -97,7 +121,7 @@ export const socialLogin = async (
 
   try {
     const decoded = await adminAuth.verifyIdToken(firebaseToken);
-    const { email, name } = decoded;
+    const { email, name, email_verified } = decoded;
 
     if (!email) {
       return res.status(400).json({
@@ -119,11 +143,12 @@ export const socialLogin = async (
         email,
         name: name,
         isSocialLogin: true,
+        isVerified: email_verified,
       });
     }
 
     return sendAuthResponse(res, user, 200);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("🔥 Detailed Firebase Admin Verification Error:", error);
     return res.status(401).json({
       message: "Invalid or expired provider configuration mapping token.",
@@ -152,22 +177,24 @@ export const forgotPassword = async (req: Request, res: Response) => {
     return res.status(200).json(genericResponse);
   }
 
-  await Password_Reset.deleteMany({
+  await Auth_Tokens.deleteMany({
     userId: user._id,
+    type: "PASSWORD_RESET",
   });
 
-  const rawToken = cryptoUtil.generateResetToken();
+  const rawToken = cryptoUtil.generateRandomToken();
 
   const hashedToken = cryptoUtil.hashToken(rawToken);
 
-  await Password_Reset.create({
+  await Auth_Tokens.create({
     userId: user._id,
     token: hashedToken,
+    type: "PASSWORD_RESET",
   });
 
-  const resetLink = `${process.env.CLIENT_URL}reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
+  const link = `${process.env.CLIENT_URL}reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
 
-  await sendEmail({ email, resetLink });
+  await sendEmail({ email, link, type: EmailType.PASSWORD_RESET });
 
   return res.status(200).json(genericResponse);
 };
@@ -196,9 +223,10 @@ export const resetPassword = async (req: Request, res: Response) => {
 
     const hashedToken = cryptoUtil.hashToken(token);
 
-    const tokenDoc = await Password_Reset.findOne({
+    const tokenDoc = await Auth_Tokens.findOne({
       userId: user._id,
       token: hashedToken,
+      type: "PASSWORD_RESET",
     });
 
     if (!tokenDoc) {
@@ -210,23 +238,148 @@ export const resetPassword = async (req: Request, res: Response) => {
       Date.now() - new Date(tokenDoc.createdAt).getTime() > ONE_HOUR;
 
     if (isExpired) {
-      await Password_Reset.deleteOne({ _id: tokenDoc._id });
+      await Auth_Tokens.deleteOne({
+        _id: tokenDoc._id,
+        type: "PASSWORD_RESET",
+      });
       return res.status(400).json({ message: "Invalid or expired token" });
     }
 
     user.password = password;
     await user.save();
 
-    await Password_Reset.deleteMany({ userId: user._id });
+    await Auth_Tokens.deleteMany({ userId: user._id, type: "PASSWORD_RESET" });
 
     return res.status(200).json({
       message: "Password reset successful",
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in resetPassword:", error);
     return res.status(500).json({
       message: "An internal server error occurred",
     });
+  }
+};
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { token, email } = req.body;
+
+    if (!token || !email) {
+      return res.status(400).json({
+        message: "All fields (token, email) are required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    if (user.isSocialLogin) {
+      return res.status(400).json({
+        message:
+          "Accounts registered via social provider cannot verify via local tokens.",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        message: "This email address has already been verified.",
+      });
+    }
+
+    const hashedToken = cryptoUtil.hashToken(token);
+
+    const tokenDoc = await Auth_Tokens.findOne({
+      userId: user._id,
+      token: hashedToken,
+      type: "EMAIL_VERIFICATION",
+    });
+
+    if (!tokenDoc) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+    const isExpired =
+      Date.now() - new Date(tokenDoc.createdAt).getTime() > TWENTY_FOUR_HOURS;
+
+    if (isExpired) {
+      await Auth_Tokens.deleteOne({
+        _id: tokenDoc._id,
+        type: "EMAIL_VERIFICATION",
+      });
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    await Auth_Tokens.deleteMany({
+      userId: user._id,
+      type: "EMAIL_VERIFICATION",
+    });
+
+    return res.status(200).json({
+      message: "Email verification successful",
+    });
+  } catch (error: unknown) {
+    console.error("Error in verifyEmail:", error);
+    return res.status(500).json({
+      message: "An internal server error occurred",
+    });
+  }
+};
+
+export const resendVerificationEmail = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(200).json({
+        message: "If the email exists, a new verification link has been sent.",
+      });
+    }
+
+    if (user.isVerified) {
+      return res
+        .status(400)
+        .json({ message: "This email address is already verified." });
+    }
+
+    await Auth_Tokens.deleteMany({
+      userId: user._id,
+      type: "EMAIL_VERIFICATION",
+    });
+
+    const rawToken = cryptoUtil.generateRandomToken();
+
+    const hashedToken = cryptoUtil.hashToken(rawToken);
+
+    await Auth_Tokens.create({
+      userId: user._id,
+      token: hashedToken,
+      type: "EMAIL_VERIFICATION",
+      createdAt: new Date(),
+    });
+
+    const link = `${process.env.CLIENT_URL}verify-email?token=${rawToken}&email=${encodeURIComponent(email)}`;
+
+    await sendEmail({ email, link, type: EmailType.EMAIL_VERIFICATION });
+
+    return res.status(200).json({
+      message: "A fresh verification link has been sent to your email.",
+    });
+  } catch (error: unknown) {
+    console.error("Error in resendVerificationEmail:", error);
+    return res
+      .status(500)
+      .json({ message: "An internal server error occurred" });
   }
 };
 
@@ -249,7 +402,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     const { accessToken } = generateTokens(decoded._id, user.role);
 
     res.json({ accessToken });
-  } catch (err) {
+  } catch (err: unknown) {
     res.status(403).json({ message: "Invalid or expired refresh token" });
   }
 };

@@ -5,6 +5,7 @@ export interface User {
   role?: "user" | "admin";
   profileUrl: string;
   taskCount?: number;
+  isVerified: boolean;
 }
 
 import * as yup from "yup";
@@ -17,6 +18,7 @@ export interface AuthContextType {
   updateUserData: (userData: User) => void;
   isLoading: boolean;
   handleSocialLogin: (provider: Provider) => void;
+  handleResendEmail: (email: string) => void;
 }
 
 export const loginSchema = yup.object({
@@ -82,4 +84,9 @@ export interface SuccessPageProps {
   desc: string;
   buttonText?: string;
   buttonLink?: string;
+}
+
+export interface VerifyEmailPayload {
+  token: string;
+  email: string;
 }
