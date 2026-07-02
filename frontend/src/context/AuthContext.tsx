@@ -74,7 +74,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         : new GithubAuthProvider();
 
     try {
-      setIsLoading(true);
       console.log(`Initiating ${provider} authentication...`);
       const result = await signInWithPopup(auth, provider);
 
@@ -83,6 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const idToken = await firebaseUser.getIdToken(true);
 
       const res = await authService.socialLogin(idToken);
+      console.log("login response", res);
 
       localStorage.setItem(AUTH_KEYS.ACCESS, res.accessToken);
       localStorage.setItem(AUTH_KEYS.REFRESH, res.refreshToken);
@@ -93,13 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       navigate("/todos");
       return res.user;
     } catch (err: any) {
-      if (err.code === "auth/popup-closed-by-user") {
-        toast.error("Login popup was closed before completing authentication.");
-        console.error("Social login failed", err);
-        return;
-      }
-    } finally {
-      setIsLoading(false);
+      console.error("Social login failed", err);
     }
   };
 

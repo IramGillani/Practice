@@ -55,7 +55,11 @@ export const signup = async (req: Request, res: Response) => {
 
     return sendAuthResponse(res, user, 201);
   } catch (err: unknown) {
-    res.status(500).json({ message: err });
+    console.error(err);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 };
 
