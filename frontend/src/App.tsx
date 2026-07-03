@@ -11,6 +11,7 @@ import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import SignupSuccessPage from "./pages/SignupSuccessPage";
+import { EmailVerificationBanner } from "@/components/EmailReminder";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -42,11 +43,12 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   return (
     <div className="min-h-screen  bg-background p-4">
       <Toaster position="top-center" richColors />
       {isAuthenticated && <Navbar />}
+      {isAuthenticated && !user?.isVerified && <EmailVerificationBanner />}
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
 

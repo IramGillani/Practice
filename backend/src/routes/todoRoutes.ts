@@ -5,6 +5,7 @@ import {
   updateTodo,
   deleteTodo,
 } from "../controllers/todoController";
+import { checkTodoLimit } from "../middlewares/todoLimiter";
 import { authenticateToken } from "../middlewares/auth";
 
 const router = Router();
@@ -12,7 +13,7 @@ const router = Router();
 router.use(authenticateToken);
 
 router.get("/", getTodos); // GET /api/todos
-router.post("/", createTodo); // POST /api/todos
+router.post("/", checkTodoLimit, createTodo); // POST /api/todos
 router.patch("/:_id", updateTodo); // PATCH /api/todos/:_id
 router.delete("/:_id", deleteTodo); // DELETE /api/todos/:_id
 

@@ -18,7 +18,7 @@ export interface AuthContextType {
   updateUserData: (userData: User) => void;
   isLoading: boolean;
   handleSocialLogin: (provider: Provider) => void;
-  handleResendEmail: (email: string) => void;
+  handleResendEmail: (email: string) => Promise<void>;
 }
 
 export const loginSchema = yup.object({

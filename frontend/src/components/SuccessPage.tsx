@@ -1,11 +1,10 @@
 import { Check } from "lucide-react";
-import { Link } from "react-router-dom";
 import type { SuccessPageProps } from "@/types";
 const SuccessPage = ({
-  heading,
-  desc,
-  buttonText,
-  buttonLink,
+  heading = "Account Created Successfully",
+  desc = "Your account has been created successfully.",
+  buttonText = "To-Do List",
+  buttonLink = "todos",
 }: SuccessPageProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

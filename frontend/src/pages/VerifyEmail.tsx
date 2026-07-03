@@ -49,10 +49,6 @@ export default function VerifyEmail() {
         setStatus("success");
 
         setMessage(res.message!);
-
-        setTimeout(() => {
-          navigate("/todos");
-        }, 2000);
       } catch (err: any) {
         setStatus("error");
 
@@ -100,9 +96,6 @@ export default function VerifyEmail() {
               </CardDescription>
             </CardHeader>
             <CardFooter className="pb-8 flex flex-col items-center gap-2">
-              <p className="text-xs text-muted-foreground animate-pulse">
-                Redirecting you to your todos momentarily...
-              </p>
               <Button
                 asChild
                 variant="link"
