@@ -6,9 +6,12 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendEmail = async ({
   email,
-  link,
+  rawToken,
   type,
+  route,
 }: EmailParams): Promise<void> => {
+  const link = `${process.env.CLIENT_URL}${route}?token=${rawToken}&email=${encodeURIComponent(email)}`;
+
   let subject: string;
   let html: string;
 

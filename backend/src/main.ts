@@ -9,6 +9,7 @@ import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import mongoose from "mongoose";
+import { errorHandler } from "./middlewares/errorHandler";
 
 const app: Application = express();
 
@@ -30,6 +31,7 @@ app.use("/api/todos", todoRoutes);
 app.use("/api/users", authRoutes);
 app.use("/api/profile", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

@@ -1,88 +1,52 @@
-import { Request, Response } from "express";
-import Todo from "../models/Todo";
+import { asyncHandler } from "../utils/asyncHandler";
+import * as TodoService from "../services/todoService";
 
-export const getTodos = async (req: Request, res: Response) => {
-  try {
-    const limit = parseInt(req.query.limit as string) || 6;
-    const skip = parseInt(req.query.skip as string) || 0;
+export const getTodos = asyncHandler(async (req, res) => {
+  const limit = Number(req.query.limit) || 6;
+  const skip = Number(req.query.skip) || 0;
 
-    const query = { userId: req.user._id };
+  const data = await TodoService.getTodos({
+    userId: req.user._id,
+    limit,
+    skip,
+  });
 
-    const totalTasks = await Todo.countDocuments(query);
+  return res.status(200).json(data);
+});
 
-    const todos = await Todo.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+export const createTodo = asyncHandler(async (req, res) => {
+  const { text } = req.body;
 
-    res.status(200).json({
-      tasks: todos,
-      hasMore: skip + todos.length < totalTasks,
-    });
-  } catch (error) {
-    console.error("❌ GET Error:", error);
-    res.status(500).json({ message: "Server error while fetching tasks" });
-  }
-};
+  const todo = await TodoService.createTodo({
+    text,
+    userId: req.user._id,
+  });
 
-export const createTodo = async (req: Request, res: Response) => {
-  try {
-    const { text } = req.body;
+  return res.status(201).json(todo);
+});
 
-    if (!text || text.trim() === "") {
-      console.warn("⚠️ Validation failed: 'text' field is missing or empty");
-      return res.status(400).json({ message: "Must enter a task" });
-    }
+export const updateTodo = asyncHandler(async (req, res) => {
+  const { _id } = req.params;
 
-    const newTodo = await Todo.create({ text, userId: req.user._id });
+  const todo = await TodoService.updateTodo({
+    todoId: _id,
+    userId: req.user._id,
+    updates: req.body,
+  });
 
-    res.status(201).json(newTodo);
-  } catch (error) {
-    console.error("❌ POST Error:", error);
-    res.status(400).json({ message: "Invalid data provided for task" });
-  }
-};
+  return res.status(200).json(todo);
+});
 
-export const updateTodo = async (req: Request, res: Response) => {
-  try {
-    const { _id } = req.params;
-    const updates = req.body;
+export const deleteTodo = asyncHandler(async (req, res) => {
+  const { _id } = req.params;
 
-    const updatedTodo = await Todo.findOneAndUpdate(
-      { _id, userId: req.user._id },
-      updates,
-      {
-        new: true,
-        runValidators: true,
-      },
-    );
+  await TodoService.deleteTodo({
+    todoId: _id,
+    userId: req.user._id,
+  });
 
-    if (!updatedTodo)
-      return res.status(404).json({ message: "Task not found" });
-
-    res.status(200).json(updatedTodo);
-  } catch (error) {
-    console.error("❌ PATCH Error:", error);
-    res.status(400).json({ message: "Failed to update task" });
-  }
-};
-
-export const deleteTodo = async (req: Request, res: Response) => {
-  try {
-    const { _id } = req.params;
-
-    const deletedTodo = await Todo.findOneAndDelete({
-      _id,
-      userId: req.user._id,
-    });
-
-    if (!deletedTodo) {
-      console.warn(`⚠️ Task ${_id} not found in Database`);
-      return res.status(404).json({ message: "Task not found" });
-    }
-
-    res.status(200).json({ _id, message: "Deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+  return res.status(200).json({
+    _id,
+    message: "Deleted successfully",
+  });
+});

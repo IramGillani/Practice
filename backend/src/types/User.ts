@@ -1,4 +1,4 @@
-export interface IUser {
+export interface IUser extends Document {
   _id: string;
   name: string;
   email: string;
@@ -22,13 +22,15 @@ export interface UserResponse {
   taskCount?: number;
   isVerified: boolean;
 }
-export enum EmailType {
-  PASSWORD_RESET = "PASSWORD_RESET",
-  EMAIL_VERIFICATION = "EMAIL_VERIFICATION",
+
+export interface UserParams {
+  userId: string;
 }
 
-export interface EmailParams {
-  email: string;
-  link: string;
-  type: EmailType;
+export interface UpdateInfoProps {
+  userId: string;
+  name?: string;
+  currentPassword?: string;
+  newPassword?: string;
+  file?: Express.Multer.File;
 }

@@ -1,5 +1,5 @@
 import { Schema, model, Document, Types } from "mongoose";
-import { EmailType } from "../types/User";
+import { EmailType } from "../types";
 
 export interface IAuth_Tokens extends Document {
   userId: Types.ObjectId;

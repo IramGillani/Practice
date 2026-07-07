@@ -1,415 +1,99 @@
-import User from "../models/User";
 import { Request, Response } from "express";
-import { EmailType } from "../types";
-
-import jwt from "jsonwebtoken";
-import { cryptoUtil } from "../utils/generateRandomToken";
 import { sendAuthResponse } from "../utils/authHelper";
-import { adminAuth } from "../config/firebase";
 
-import { generateTokens } from "../utils/generateToken";
+import * as AuthService from "../services/authService";
+import { asyncHandler } from "../utils/asyncHandler";
 
-import { Auth_Tokens } from "../models/Auth_Tokens";
-import { sendEmail } from "../utils/sendEmail";
+export const signup = asyncHandler(async (req, res) => {
+  const { name, email, password } = req.body;
 
-export const signup = async (req: Request, res: Response) => {
-  try {
-    const { name, email, password } = req.body;
+  const user = await AuthService.signup(name, email, password);
 
-    if (!password || password.trim() === "") {
-      return res
-        .status(400)
-        .json({ message: "Password is required for email registration." });
-    }
+  return sendAuthResponse(res, user, 201);
+});
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ message: "Email already registered" });
-    }
+export const login = asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
 
-    const user = await User.create({
-      name,
-      email,
-      password,
-      isVerified: false,
-    });
+  const user = await AuthService.login({ email, password });
 
-    const rawToken = cryptoUtil.generateRandomToken();
+  return sendAuthResponse(res, user, 200);
+});
 
-    const hashedToken = cryptoUtil.hashToken(rawToken);
+export const logout = asyncHandler(async (req: Request, res: Response) => {
+  const { token } = req.body;
 
-    await Auth_Tokens.deleteMany({
-      userId: user._id,
-      type: "EMAIL_VERIFICATION",
-    });
+  await AuthService.logout(token);
 
-    await Auth_Tokens.create({
-      userId: user._id,
-      token: hashedToken,
-      type: "EMAIL_VERIFICATION",
-    });
+  return res.json({
+    message: "Logged out successfully",
+  });
+});
 
-    const link = `${process.env.CLIENT_URL}verify-email?token=${rawToken}&email=${encodeURIComponent(email)}`;
-
-    await sendEmail({ email, link, type: EmailType.EMAIL_VERIFICATION });
-
-    return sendAuthResponse(res, user, 201);
-  } catch (err: unknown) {
-    console.error(err);
-
-    return res.status(500).json({
-      message: "Internal server error",
-    });
-  }
-};
-
-export const login = async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-
-    if (user.isSocialLogin) {
-      return res.status(403).json({
-        message:
-          "This account uses social sign-in. Please log in using your social provider.",
-      });
-    }
-
-    if (!(await user.comparePassword(password))) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-    return sendAuthResponse(res, user, 200);
-  } catch (err: unknown) {
-    res.status(500).json({ message: "Server error during login" });
-  }
-};
-
-export const logout = async (req: Request, res: Response) => {
-  try {
-    const { token } = req.body;
-
-    if (!token) {
-      return res.status(400).json({ message: "Refresh Token is required" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as {
-      _id: string;
-    };
-
-    await User.findByIdAndUpdate(decoded._id, { refreshToken: null });
-
-    res.json({ message: "Logged out successfully" });
-  } catch (err: unknown) {
-    res.status(200).json({ message: "Session already cleared" });
-  }
-};
-
-export const socialLogin = async (
-  req: Request,
-  res: Response,
-): Promise<Response> => {
+export const socialLogin = asyncHandler(async (req, res) => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader?.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({ message: "Missing or malformed authorization header" });
-  }
+  const user = await AuthService.socialLogin(authHeader);
 
-  const firebaseToken = authHeader.split(" ")[1];
+  return sendAuthResponse(res, user, 200);
+});
 
-  try {
-    const decoded = await adminAuth.verifyIdToken(firebaseToken);
-    const { email, name, email_verified } = decoded;
-
-    if (!email) {
-      return res.status(400).json({
-        message: "Provider must provide a valid verified email address.",
-      });
-    }
-
-    let user = await User.findOne({ email });
-
-    if (user) {
-      if (!user.isSocialLogin) {
-        return res.status(409).json({
-          message:
-            "An account with this email already exists using standard registration. Please enter your password manually.",
-        });
-      }
-    } else {
-      user = await User.create({
-        email,
-        name: name,
-        isSocialLogin: true,
-        isVerified: email_verified,
-      });
-    }
-
-    return sendAuthResponse(res, user, 200);
-  } catch (error: unknown) {
-    console.error("🔥 Detailed Firebase Admin Verification Error:", error);
-    return res.status(401).json({
-      message: "Invalid or expired provider configuration mapping token.",
-    });
-  }
-};
-
-export const forgotPassword = async (req: Request, res: Response) => {
+export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  const user = await User.findOne({
+  const message = await AuthService.forgotPassword(email);
+
+  return res.status(200).json({
+    message,
+  });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { token, email, password } = req.body;
+
+  const message = await AuthService.resetPassword({
+    token,
+    email,
+    password,
+  });
+
+  return res.status(200).json({
+    message,
+  });
+});
+
+export const verifyEmail = asyncHandler(async (req, res) => {
+  const { token, email } = req.body;
+
+  const message = await AuthService.verifyEmail({
+    token,
     email,
   });
 
-  const genericResponse = {
-    message:
-      "If an account exists with that email, a reset link has been sent.",
-  };
-
-  if (!user) {
-    return res.status(200).json(genericResponse);
-  }
-
-  if (user.isSocialLogin) {
-    console.log(`Password reset blocked for social account: ${email}`);
-    return res.status(200).json(genericResponse);
-  }
-
-  await Auth_Tokens.deleteMany({
-    userId: user._id,
-    type: "PASSWORD_RESET",
+  return res.status(200).json({
+    message,
   });
+});
 
-  const rawToken = cryptoUtil.generateRandomToken();
+export const resendVerificationEmail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
 
-  const hashedToken = cryptoUtil.hashToken(rawToken);
+  const message = await AuthService.resendVerificationEmail(email);
 
-  await Auth_Tokens.create({
-    userId: user._id,
-    token: hashedToken,
-    type: "PASSWORD_RESET",
+  return res.status(200).json({
+    message,
   });
+});
 
-  const link = `${process.env.CLIENT_URL}reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
-
-  await sendEmail({ email, link, type: EmailType.PASSWORD_RESET });
-
-  return res.status(200).json(genericResponse);
-};
-
-export const resetPassword = async (req: Request, res: Response) => {
-  try {
-    const { token, email, password } = req.body;
-
-    if (!token || !email || !password) {
-      return res.status(400).json({
-        message: "All fields (token, email, password) are required",
-      });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    if (user.isSocialLogin) {
-      return res.status(400).json({
-        message:
-          "Accounts registered via social provider cannot modify local password values.",
-      });
-    }
-
-    const hashedToken = cryptoUtil.hashToken(token);
-
-    const tokenDoc = await Auth_Tokens.findOne({
-      userId: user._id,
-      token: hashedToken,
-      type: "PASSWORD_RESET",
-    });
-
-    if (!tokenDoc) {
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    const ONE_HOUR = 60 * 60 * 1000;
-    const isExpired =
-      Date.now() - new Date(tokenDoc.createdAt).getTime() > ONE_HOUR;
-
-    if (isExpired) {
-      await Auth_Tokens.deleteOne({
-        _id: tokenDoc._id,
-        type: "PASSWORD_RESET",
-      });
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    user.password = password;
-    await user.save();
-
-    await Auth_Tokens.deleteMany({ userId: user._id, type: "PASSWORD_RESET" });
-
-    return res.status(200).json({
-      message: "Password reset successful",
-    });
-  } catch (error: unknown) {
-    console.error("Error in resetPassword:", error);
-    return res.status(500).json({
-      message: "An internal server error occurred",
-    });
-  }
-};
-export const verifyEmail = async (req: Request, res: Response) => {
-  try {
-    const { token, email } = req.body;
-
-    if (!token || !email) {
-      return res.status(400).json({
-        message: "All fields (token, email) are required",
-      });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    if (user.isSocialLogin) {
-      return res.status(400).json({
-        message:
-          "Accounts registered via social provider cannot verify via local tokens.",
-      });
-    }
-
-    if (user.isVerified) {
-      return res.status(400).json({
-        message: "This email address has already been verified.",
-      });
-    }
-
-    const hashedToken = cryptoUtil.hashToken(token);
-
-    const tokenDoc = await Auth_Tokens.findOne({
-      userId: user._id,
-      token: hashedToken,
-      type: "EMAIL_VERIFICATION",
-    });
-
-    if (!tokenDoc) {
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-    const isExpired =
-      Date.now() - new Date(tokenDoc.createdAt).getTime() > TWENTY_FOUR_HOURS;
-
-    if (isExpired) {
-      await Auth_Tokens.deleteOne({
-        _id: tokenDoc._id,
-        type: "EMAIL_VERIFICATION",
-      });
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    user.isVerified = true;
-    await user.save();
-
-    await Auth_Tokens.deleteMany({
-      userId: user._id,
-      type: "EMAIL_VERIFICATION",
-    });
-
-    return res.status(200).json({
-      message: "Email verification successful",
-    });
-  } catch (error: unknown) {
-    console.error("Error in verifyEmail:", error);
-    return res.status(500).json({
-      message: "An internal server error occurred",
-    });
-  }
-};
-
-export const resendVerificationEmail = async (req: Request, res: Response) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(200).json({
-        message: "If the email exists, a new verification link has been sent.",
-      });
-    }
-
-    if (user.isVerified) {
-      return res
-        .status(400)
-        .json({ message: "This email address is already verified." });
-    }
-
-    await Auth_Tokens.deleteMany({
-      userId: user._id,
-      type: "EMAIL_VERIFICATION",
-    });
-
-    const rawToken = cryptoUtil.generateRandomToken();
-
-    const hashedToken = cryptoUtil.hashToken(rawToken);
-
-    await Auth_Tokens.create({
-      userId: user._id,
-      token: hashedToken,
-      type: "EMAIL_VERIFICATION",
-      createdAt: new Date(),
-    });
-
-    const link = `${process.env.CLIENT_URL}verify-email?token=${rawToken}&email=${encodeURIComponent(email)}`;
-
-    await sendEmail({ email, link, type: EmailType.EMAIL_VERIFICATION });
-
-    return res.status(200).json({
-      message: "A fresh verification link has been sent to your email.",
-    });
-  } catch (error: unknown) {
-    console.error("Error in resendVerificationEmail:", error);
-    return res
-      .status(500)
-      .json({ message: "An internal server error occurred" });
-  }
-};
-
-export const refreshAccessToken = async (req: Request, res: Response) => {
+export const refreshAccessToken = asyncHandler(async (req, res) => {
   const { token } = req.body;
 
-  if (!token)
-    return res.status(401).json({ message: "Refresh Token required" });
+  const accessToken = await AuthService.refreshAccessToken(token);
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as {
-      _id: string;
-    };
-    const user = await User.findById(decoded._id);
-
-    if (!user || user.refreshToken !== token) {
-      return res.status(403).json({ message: "Invalid refresh token" });
-    }
-
-    const { accessToken } = generateTokens(decoded._id, user.role);
-
-    res.json({ accessToken });
-  } catch (err: unknown) {
-    res.status(403).json({ message: "Invalid or expired refresh token" });
-  }
-};
+  return res.status(200).json({
+    accessToken,
+  });
+});
 
 // export const getProfile = async (req: any, res: Response) => {
 //   if (req.user) {
