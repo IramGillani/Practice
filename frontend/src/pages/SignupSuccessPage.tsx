@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
-import { CheckCircle2, Mail, RefreshCw, ArrowRight } from "lucide-react";
+import { AlertCircle, Mail, RefreshCw, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,33 +18,33 @@ export default function SignupSuccessPage() {
     <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
       <Card className="w-full max-w-lg shadow-lg p-2">
         <CardHeader className="flex flex-col items-center pt-8">
-          <div className="rounded-full bg-primary/10 p-4 mb-4">
-            <CheckCircle2 className="h-12 w-12 text-primary" />
+          <div className="rounded-full bg-warning/10 p-4 mb-4 text-warning">
+            <Mail className="h-12 w-12 text-primary" />
           </div>
           <CardTitle className="text-center text-3xl font-bold tracking-tight text-foreground">
-            Account Created Successfully
+            Verify Your Email
           </CardTitle>
           <CardDescription className="mt-2 text-center text-base max-w-sm">
-            Your account has been created successfully. Before you can access
-            all features, please verify your email address.
+            Your account has been created, but **access is restricted** until
+            your email address is verified.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 pb-4">
           <div className="rounded-xl border border-border bg-muted/40 p-5">
             <div className="flex items-start gap-3">
-              <Mail className="mt-0.5 h-5 w-5 text-primary shrink-0" />
+              <AlertCircle className="mt-0.5 h-5 w-5 text-destructive shrink-0" />
               <div>
                 <h2 className="font-semibold text-foreground">
-                  Check your inbox
+                  Activation Required
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  We've sent you a verification email. Click the verification
-                  link inside the email to activate your account.
+                  We've sent a verification link to your email. You must click
+                  this link to activate your account and gain access to the
+                  application.
                 </p>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  If you don't see it within a few minutes, be sure to check
-                  your spam or junk folder.
+                  Can't find it? Check your spam or junk folder just in case.
                 </p>
               </div>
             </div>
@@ -65,20 +65,13 @@ export default function SignupSuccessPage() {
             </Button>
 
             <Button asChild className="w-full gap-2 py-6 text-sm">
-              <Link to="/todos">
-                Continue to Todos
+              <Link to="/login">
+                Already Verified? Go to Login
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
           </div>
         </CardContent>
-
-        <CardFooter className="pb-8 justify-center">
-          <p className="text-center text-sm text-muted-foreground max-w-xs">
-            You can continue using the application, but some features may remain
-            unavailable until your email has been verified.
-          </p>
-        </CardFooter>
       </Card>
     </main>
   );

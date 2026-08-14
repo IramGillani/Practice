@@ -1,3 +1,4 @@
+import type { Subscription } from "./Plan";
 export interface User {
   _id: string;
   name: string;
@@ -6,6 +7,9 @@ export interface User {
   profileUrl: string;
   taskCount?: number;
   isVerified: boolean;
+  isInvited: boolean;
+  isOnboardingCompleted: boolean;
+  subscription?: Subscription | null;
 }
 
 import * as yup from "yup";

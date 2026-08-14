@@ -2,6 +2,7 @@ import * as authTokensRepo from "../repositories/authTokensRepo";
 import * as UserRepo from "../repositories/userRepo";
 import { cryptoUtil } from "../utils/generateRandomToken";
 import { sendEmail } from "../utils/sendEmail";
+import { StripeService } from "./stripeServices";
 import { EmailType, ResetPasswordProps, VerifyEmailProps } from "../types";
 import { AppError } from "../utils/customErrorHandler";
 import { isTokenExpired } from "../utils/tokenExpChecker";
@@ -20,12 +21,16 @@ export const signup = async (name: string, email: string, password: string) => {
     throw new AppError(409, "Email already registered");
   }
 
+  const stripeCustomer = await StripeService.createCustomer(email, name);
+
   const user = await UserRepo.createUser({
     name,
     email,
     password,
     isVerified: false,
+    stripeCustomerId: stripeCustomer.id,
   });
+  console.log("customerId", stripeCustomer.id);
 
   const rawToken = cryptoUtil.generateRandomToken();
   const hashedToken = cryptoUtil.hashToken(rawToken);
@@ -36,14 +41,13 @@ export const signup = async (name: string, email: string, password: string) => {
     "EMAIL_VERIFICATION",
   );
 
-  const link = `${process.env.CLIENT_URL}verify-email?token=${rawToken}&email=${encodeURIComponent(email)}`;
-
   await sendEmail({
     email,
     rawToken,
     route: "verify-email",
     type: EmailType.EMAIL_VERIFICATION,
   });
+  console.log("user on signup before selecting fields", user);
 
   return user;
 };
@@ -124,11 +128,13 @@ export const socialLogin = async (authHeader?: string) => {
 
     return existingUser;
   }
+  const stripeCustomer = await StripeService.createCustomer(email, name);
 
   return UserRepo.createSocialUser({
     email,
     name: name ?? "",
     isVerified: email_verified,
+    stripeCustomerId: stripeCustomer.id,
   });
 };
 
@@ -263,8 +269,8 @@ export const verifyEmail = async ({ token, email }: VerifyEmailProps) => {
   await user.save();
 
   await authTokensRepo.deleteAuthTokens(user._id, EmailType.EMAIL_VERIFICATION);
-
-  return "Email verification successful";
+  console.log("user after vefication on backend", user);
+  return { message: "Email verified successfully", user };
 };
 
 export const resendVerificationEmail = async (email: string) => {
@@ -329,3 +335,5 @@ export const refreshAccessToken = async (token: string) => {
 
   return accessToken;
 };
+
+

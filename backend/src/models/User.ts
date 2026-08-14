@@ -16,11 +16,22 @@ const userSchema = new Schema<IUser, {}, IUserMethods>(
     role: { type: String, enum: ["user", "admin"], default: "user" },
     refreshToken: { type: String, default: null },
     profile: { type: String },
+    stripeCustomerId: { type: String },
+    stripeSubscriptionId: { type: String },
     isSocialLogin: {
       type: Boolean,
       default: false,
     },
     isVerified: { type: Boolean, default: false },
+    isInvitedUser: { type: Boolean, default: false },
+    isOnboardingCompleted: { type: Boolean, default: false },
+    hasUsedTrial: { type: Boolean, default: false },
+
+    organization: {
+      name: { type: String },
+      url: { type: String },
+      teamSize: { type: String, enum: ["1", "2-10", "11+"] },
+    },
   },
   {
     timestamps: true,
@@ -35,6 +46,17 @@ const userSchema = new Schema<IUser, {}, IUserMethods>(
           profileUrl: ret.profileUrl || "",
           taskCount: ret.taskCount || 0,
           isVerified: ret.isVerified,
+          isInvited: ret.isInvitedUser,
+          isOnboardingCompleted: ret.isOnboardingCompleted,
+          subscription: ret.subscription
+            ? {
+                status: ret.subscription.status || null,
+                planId: ret.subscription.planId || null,
+                trialEndsAt: ret.subscription.trialEndsAt || null,
+                expiresAt: ret.subscription.expiresAt || null,
+                startedAt: ret.subscription.startedAt || null,
+              }
+            : null,
         };
       },
     },
@@ -91,6 +113,13 @@ userSchema.virtual("taskCount", {
   localField: "_id",
   foreignField: "userId",
   count: true,
+});
+
+userSchema.virtual("subscription", {
+  ref: "Subscription",
+  localField: "_id",
+  foreignField: "userId",
+  justOne: true,
 });
 
 export default model<IUser, Model<IUser, {}, IUserMethods>>("User", userSchema);

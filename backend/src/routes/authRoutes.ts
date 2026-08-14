@@ -10,6 +10,7 @@ import {
   verifyEmail,
   resendVerificationEmail,
 } from "../controllers/authController";
+import { submitOnboarding } from "../controllers/onboardingController";
 import { rateLimiter } from "../middlewares/rate-limiter";
 
 const router = Router();
@@ -23,6 +24,8 @@ router.post("/refresh-token", refreshAccessToken);
 router.post("/verify-email", verifyEmail);
 router.post("/resend-verification", rateLimiter, resendVerificationEmail);
 router.post("/social-login", socialLogin);
+router.get("/onboarding", submitOnboarding);
+
 // router.get("/profile", authMiddleware, getProfile);
 
 export default router;

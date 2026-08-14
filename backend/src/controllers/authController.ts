@@ -1,4 +1,3 @@
-import { Request, Response } from "express";
 import { sendAuthResponse } from "../utils/authHelper";
 
 import * as AuthService from "../services/authService";
@@ -12,7 +11,7 @@ export const signup = asyncHandler(async (req, res) => {
   return sendAuthResponse(res, user, 201);
 });
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
+export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await AuthService.login({ email, password });
@@ -20,7 +19,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   return sendAuthResponse(res, user, 200);
 });
 
-export const logout = asyncHandler(async (req: Request, res: Response) => {
+export const logout = asyncHandler(async (req, res) => {
   const { token } = req.body;
 
   await AuthService.logout(token);
@@ -65,13 +64,14 @@ export const resetPassword = asyncHandler(async (req, res) => {
 export const verifyEmail = asyncHandler(async (req, res) => {
   const { token, email } = req.body;
 
-  const message = await AuthService.verifyEmail({
+  const { message, user } = await AuthService.verifyEmail({
     token,
     email,
   });
-
+  console.log("Returing user object after verification", user);
   return res.status(200).json({
     message,
+    user,
   });
 });
 
@@ -94,11 +94,3 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     accessToken,
   });
 });
-
-// export const getProfile = async (req: any, res: Response) => {
-//   if (req.user) {
-//     res.json(req.user);
-//   } else {
-//     res.status(404).json({ message: "User not found" });
-//   }
-// };

@@ -15,3 +15,17 @@ export const updateInfo = asyncHandler(async (req, res) => {
     user,
   });
 });
+
+export const getProfile = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+
+  if (!userId) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+
+  const userProfile = await UserService.getUser(userId);
+  console.log("the user we got on update", userProfile);
+
+  res.status(200).json(userProfile);
+});

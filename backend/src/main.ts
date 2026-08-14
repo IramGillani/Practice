@@ -1,19 +1,27 @@
 import dns from "node:dns";
+import { sendToUser } from "@/utils/activeConnection";
 // Added to fix MongoDB Atlas SRV resolution failures in some network environments.
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
+
+import path from "path";
+import http from "node:http";
 import express, { Application } from "express";
 import cors from "cors";
+import mongoose from "mongoose";
+import { WebSocketServer, WebSocket } from "ws";
+import * as UserRepo from "@/repositories/userRepo";
+
 import { connectDB } from "./config/db";
 import todoRoutes from "./routes/todoRoutes";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import adminRoutes from "./routes/adminRoutes";
-import mongoose from "mongoose";
+import planRoutes from "./routes/planRoutes";
+import onboardingRoutes from "./routes/onboardingRoutes";
+import webhookRoutes from "./routes/webhookRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
 
 const app: Application = express();
-
-import path from "path";
 
 app.use("/profile", express.static(path.join(__dirname, "../public/profile")));
 
@@ -24,6 +32,13 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use(
+  "/api/webhooks",
+  express.raw({ type: "application/json" }),
+  webhookRoutes,
+);
+
 app.use(express.json());
 
 // Routes
@@ -31,7 +46,59 @@ app.use("/api/todos", todoRoutes);
 app.use("/api/users", authRoutes);
 app.use("/api/profile", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/onboarding", onboardingRoutes);
+app.use("/api/plans", planRoutes);
 app.use(errorHandler);
+
+const server = http.createServer(app);
+
+const wss = new WebSocketServer({ server });
+
+export const activeConnections = new Map<string, WebSocket>();
+
+wss.on("connection", async (ws, req) => {
+  const urlParams = new URLSearchParams(req.url?.split("?")[1] || "");
+  const userId = urlParams.get("userId");
+
+  if (!userId) {
+    ws.close(1008, "userId query parameter required");
+    return;
+  }
+
+  activeConnections.set(userId, ws);
+  console.log(`User ${userId} connected to WebSocket.`);
+  console.log("WS REGISTERED:", {
+    userId,
+    connections: [...activeConnections.keys()],
+  });
+
+  const user = await UserRepo.findById(userId);
+  if (user) {
+    // ws.send(
+    //   JSON.stringify({
+    //     event: "CHECKOUT_COMPLETED",
+    //     payload: user,
+    //   }),
+    // );
+    sendToUser(user._id.toString(), "CHECKOUT_COMPLETED", user);
+  }
+
+  ws.on("message", (message) => {
+    console.log(`Received: ${message}`);
+  });
+
+  ws.send(
+    JSON.stringify({
+      type: "WELCOME",
+      message: "Connected to WebSocket server!",
+    }),
+  );
+
+  ws.on("close", () => {
+    activeConnections.delete(userId);
+    console.log(`User ${userId} disconnected from WebSocket.`);
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 
@@ -40,8 +107,9 @@ const startServer = async () => {
     console.log("Attempting to connect to MongoDB...");
     await connectDB();
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log(`WebSocket server running on ws://localhost:${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);
@@ -49,7 +117,7 @@ const startServer = async () => {
   }
 };
 
-// Handle Nodemon reloads gracefully
+// Graceful shutdowns
 process.once("SIGUSR2", async () => {
   await mongoose.connection.close();
   process.kill(process.pid, "SIGUSR2");

@@ -5,8 +5,9 @@ import {
   updateTodo,
   deleteTodo,
 } from "../controllers/todoController";
-import { checkTodoLimit } from "../middlewares/todoLimiter";
+
 import { authenticateToken } from "../middlewares/auth";
+import { checkTodoLimit } from "@/middlewares/todoLimiter";
 
 const router = Router();
 

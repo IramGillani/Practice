@@ -6,7 +6,6 @@ import DeleteConfirmationModal from "@/components/DeleteModal";
 import TaskInput from "@/components/TaskInput";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ErrorMessage } from "@/components/ErrorMessage";
 
 import { useTask } from "@/context/TaskProvider";
 import { processedTasks } from "@/utils";
@@ -95,7 +94,7 @@ const TodoApp = () => {
         <h1 className="text-center text-2xl font-bold text-foreground mb-4">
           Task Manager
         </h1>
-        {/* <ErrorMessage /> */}
+
         <TaskInput />
 
         <div className="flex flex-wrap items-center justify-between gap-4 pt-4 pb-2">

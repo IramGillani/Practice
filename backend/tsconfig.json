@@ -3,6 +3,9 @@
     "target": "ES6",
     "module": "commonjs",
     "strict": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

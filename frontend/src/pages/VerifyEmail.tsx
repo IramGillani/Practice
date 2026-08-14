@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { authService } from "@/api/authApi";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+
 import {
   RefreshCw,
   Loader2,
@@ -14,17 +15,18 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Link } from "react-router-dom";
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
-  const { handleResendEmail } = useAuth();
-
+  const { handleResendEmail, updateUserData } = useAuth();
   const navigate = useNavigate();
+
+  const handleContinue = () => {
+    navigate("/onboarding", { replace: true });
+  };
 
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
@@ -45,10 +47,14 @@ export default function VerifyEmail() {
 
       try {
         const res = await authService.verifyEmail({ token, email });
-
         setStatus("success");
+        setMessage(res.message || "Your email has been successfully verified!");
 
-        setMessage(res.message!);
+        updateUserData(res.user);
+        console.log("after verification, the user", res.user);
+        setTimeout(() => {
+          navigate("/onboarding", { replace: true });
+        }, 1500);
       } catch (err: any) {
         setStatus("error");
 
@@ -65,7 +71,7 @@ export default function VerifyEmail() {
     };
 
     verify();
-  }, []);
+  }, [searchParams, email]);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
@@ -91,22 +97,19 @@ export default function VerifyEmail() {
               <CardTitle className="text-center text-2xl font-bold tracking-tight text-foreground">
                 Email Verified!
               </CardTitle>
-              <CardDescription className="text-center text-sm">
+              <CardDescription className="text-center text-sm mt-2">
                 {message}
               </CardDescription>
             </CardHeader>
-            <CardFooter className="pb-8 flex flex-col items-center gap-2">
+            <CardContent className="pb-8">
               <Button
-                asChild
-                variant="link"
-                className="mt-2 text-primary gap-1"
+                className="w-full gap-2 py-6 text-sm"
+                onClick={handleContinue}
               >
-                <Link to="/todos">
-                  Cotinue to Todos
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
+                Continue With GoalSnap
+                <ArrowRight className="h-4 w-4" />
               </Button>
-            </CardFooter>
+            </CardContent>
           </>
         )}
 
@@ -132,9 +135,6 @@ export default function VerifyEmail() {
               >
                 <RefreshCw className="h-4 w-4" />
                 Resend Verification Email
-              </Button>
-              <Button asChild variant="ghost" className="w-full text-sm">
-                <Link to="/login">Back to Sign In</Link>
               </Button>
             </CardContent>
           </>

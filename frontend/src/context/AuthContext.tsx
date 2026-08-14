@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { toast } from "sonner";
+import { signOut } from "firebase/auth";
 
 import { AUTH_KEYS } from "@/types";
 import { authService } from "@/api/authApi";
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       const refreshToken = localStorage.getItem(AUTH_KEYS.REFRESH);
-
+      await signOut(auth);
       if (refreshToken) {
         await authService.logout(refreshToken);
       }
@@ -49,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem(AUTH_KEYS.USER);
 
       setUser(null);
+
       navigate("/login");
     }
   };
@@ -114,26 +116,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(updatedUser);
     localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(updatedUser));
   };
-
-  // useEffect(() => {
-  //     const initAuth = async () => {
-  //       const token = localStorage.getItem("token");
-
-  //       if (token) {
-  //         try {
-  //           // const userData = await authService.getProfile();
-  //           // setUser(userData);
-  //         } catch (err) {
-  //           console.error("Token validation failed:", err);
-  //           logout();
-  //         }
-  //       }
-
-  //       setIsLoading(false);
-  //     };
-
-  //     initAuth();
-  //   }, []);
 
   return (
     <AuthContext.Provider

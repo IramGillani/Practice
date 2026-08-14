@@ -3,6 +3,7 @@ export interface SignupProps {
   email: string;
   password: string;
   isVerified: boolean;
+  stripeCustomerId: string;
 }
 export interface LoginProps {
   email: string;
@@ -31,3 +32,11 @@ export interface EmailParams {
   type: EmailType;
   route: string;
 }
+
+export type TeamSize = "1" | "2-10" | "10+";
+
+export type OnboardingFormData = {
+  name: string;
+  url: string;
+  teamSize: TeamSize;
+};

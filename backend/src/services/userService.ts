@@ -1,4 +1,4 @@
-import * as userRepo from "../repositories/userRepo";
+import * as UserRepo from "../repositories/userRepo";
 import { AppError } from "../utils/customErrorHandler";
 import { UpdateInfoProps } from "../types";
 export const updateInfo = async ({
@@ -8,11 +8,11 @@ export const updateInfo = async ({
   newPassword,
   file,
 }: UpdateInfoProps) => {
-  const user = await userRepo.findById(userId);
+  const user = await UserRepo.findByIdBasic(userId);
 
   if (!user) {
     if (file) {
-      await userRepo.deleteFile(file.path);
+      await UserRepo.deleteFile(file.path);
     }
 
     throw new AppError(404, "User not found");
@@ -49,9 +49,18 @@ export const updateInfo = async ({
     return user;
   } catch (error) {
     if (file) {
-      await userRepo.deleteFile(file.path);
+      await UserRepo.deleteFile(file.path);
     }
 
     throw error;
   }
+};
+
+export const getUser = async (userId: string) => {
+  const user = await UserRepo.findById(userId);
+
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  return user;
 };

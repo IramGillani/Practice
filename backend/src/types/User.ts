@@ -1,3 +1,7 @@
+import { Types } from "mongoose";
+import { ISubscription } from "./Subscription";
+import { TeamSize } from "./Auth";
+
 export interface IUser extends Document {
   _id: string;
   name: string;
@@ -11,6 +15,17 @@ export interface IUser extends Document {
   taskCount?: number;
   isSocialLogin: boolean;
   isVerified: boolean;
+  isInvitedUser: boolean;
+  isOnboardingCompleted: boolean;
+  stripeCustomerId: string;
+  stripeSubscriptionId?: string | null;
+  hasUsedTrial: boolean;
+  organization?: {
+    name: string;
+    url: string;
+    teamSize: TeamSize;
+  };
+  subscription?: ISubscription | null;
 }
 
 export interface UserResponse {

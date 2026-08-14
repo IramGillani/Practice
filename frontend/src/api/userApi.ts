@@ -9,4 +9,8 @@ export const userService = {
       method: "PATCH",
       data: data,
     }),
+  getProfile: () =>
+    apiRequest<User>(`${BASE_PATH}`, {
+      method: "GET",
+    }),
 };

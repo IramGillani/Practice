@@ -1,8 +1,9 @@
 import { apiRequest } from "@/utils";
-import {
-  type AuthResponse,
-  type LoginFormValues,
-  type SignupFormValues,
+import type {
+  AuthResponse,
+  LoginFormValues,
+  SignupFormValues,
+  User,
 } from "@/types";
 import type { VerifyEmailPayload } from "@/types";
 const BASE_PATH = "users";
@@ -55,9 +56,4 @@ export const authService = {
       method: "POST",
       data: { email },
     }),
-
-  // getProfile: () =>
-  //   apiRequest<User>(`${BASE_PATH}/profile`, {
-  //     method: "GET",
-  //   }),
 };

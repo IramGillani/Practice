@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { LoginForm } from "./pages/Login";
 import { Signup } from "./pages/SignUp";
 import TodoApp from "./pages/TodoApp";
@@ -11,19 +11,105 @@ import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import SignupSuccessPage from "./pages/SignupSuccessPage";
-import { EmailVerificationBanner } from "@/components/EmailReminder";
+import { Onboarding } from "./pages/Onboarding";
+import { absoluteNoNavbarPaths } from "./constants";
+import PricingPlans from "./pages/PlanCards";
+import TrialBanner from "./components/TrialBanner";
+import CheckoutSuccessPage from "./pages/CheckoutSuccess";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/signup" />;
+  const { isAuthenticated, user, isLoading } = useAuth();
+  console.log("=== ProtectedRoute Debug ===", {
+    isLoading,
+    isAuthenticated,
+    user,
+    isVerified: user?.isVerified,
+    isOnboardingCompleted: user?.isOnboardingCompleted,
+  });
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user?.isVerified) {
+    return <Navigate to="/signupSuccess" replace />;
+  }
+
+  if (!user?.isOnboardingCompleted) {
+    return <Navigate to="/onboarding" replace />;
+  }
+  const status = user?.subscription?.status ?? "";
+  const hasAccess = ["active", "trialing"].includes(status);
+
+  if (!hasAccess) {
+    return <Navigate to="/plans" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  if (user?.role !== "admin") return <Navigate to="/todos" replace />;
+
+  return <>{children}</>;
+};
+
+const OnboardingRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user?.isVerified) {
+    return <Navigate to="/signupSuccess" replace />;
+  }
+
+  if (user?.isOnboardingCompleted) {
+    if (user?.isInvited) {
+      return <Navigate to="/teamDashboard" replace />;
+    }
+    return <Navigate to="/plans" replace />;
+  }
+
+  return <>{children}</>;
 };
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
 
+  const status = user?.subscription?.status ?? "";
+  const hasAccess = ["active", "trialing"].includes(status);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  console.log("AuthRoute Check:", { isAuthenticated, user });
   if (isAuthenticated) {
-    if (user && !user.isVerified) {
+    if (!user?.isVerified) {
       return <Navigate to="/signupSuccess" replace />;
+    }
+    if (user?.isInvited) {
+      return <Navigate to="/teamDashboard" replace />;
+    }
+
+    if (!user?.isOnboardingCompleted) {
+      return <Navigate to="/onboarding" replace />;
+    }
+    if (!hasAccess) {
+      return <Navigate to="/plans" replace />;
     }
 
     return <Navigate to="/todos" replace />;
@@ -32,23 +118,42 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, user } = useAuth();
+const PlanRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, user, isLoading } = useAuth();
 
-  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (isLoading) return <div>Loading...</div>;
 
-  if (user?.role !== "admin") return <Navigate to="/todos" />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  if (!user?.isVerified) return <Navigate to="/signupSuccess" replace />;
+
+  if (user?.isInvited) {
+    return <Navigate to="/teamDashboard" replace />;
+  }
+
+  if (!user?.isOnboardingCompleted)
+    return <Navigate to="/onboarding" replace />;
 
   return <>{children}</>;
 };
 
 function App() {
   const { isAuthenticated, user } = useAuth();
+  console.log(user);
+  const location = useLocation();
+  const showHeader =
+    isAuthenticated && !absoluteNoNavbarPaths.includes(location.pathname);
   return (
-    <div className="min-h-screen  bg-background p-4">
+    <div className="min-h-screen bg-background p-4">
       <Toaster position="top-center" richColors />
-      {isAuthenticated && <Navbar />}
-      {isAuthenticated && !user?.isVerified && <EmailVerificationBanner />}
+
+      {showHeader && (
+        <>
+          <Navbar />
+          <TrialBanner />
+        </>
+      )}
+
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
 
@@ -114,6 +219,30 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/onboarding"
+          element={
+            <OnboardingRoute>
+              <Onboarding />
+            </OnboardingRoute>
+          }
+        />
+        <Route
+          path="/plans"
+          element={
+            <PlanRoute>
+              <PricingPlans />
+            </PlanRoute>
+          }
+        ></Route>
+        <Route
+          path="/checkoutSuccess"
+          element={
+            <PlanRoute>
+              <CheckoutSuccessPage />
+            </PlanRoute>
+          }
+        ></Route>
       </Routes>
     </div>
   );
