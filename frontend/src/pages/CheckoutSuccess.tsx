@@ -9,21 +9,10 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/AuthContext";
-import { useSubscriptionSocket } from "@/hooks/useSubscriptionSocket";
+
 export default function CheckoutSuccessPage() {
   const navigate = useNavigate();
-  const { user, updateUserData } = useAuth();
-
-  useSubscriptionSocket((data) => {
-    if (
-      (data.event === "CHECKOUT_COMPLETED" ||
-        data.event === "PAYMENT_SUCCESS") &&
-      data.payload
-    ) {
-      console.log("received payload", data.payload);
-      updateUserData(data.payload);
-    }
-  });
+  const { user } = useAuth();
 
   const status = user?.subscription?.status ?? "";
   console.log("user status", status);

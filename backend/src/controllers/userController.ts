@@ -25,7 +25,6 @@ export const getProfile = asyncHandler(async (req, res) => {
   }
 
   const userProfile = await UserService.getUser(userId);
-  console.log("the user we got on update", userProfile);
 
   res.status(200).json(userProfile);
 });

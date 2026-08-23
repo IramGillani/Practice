@@ -1,17 +1,18 @@
-import { activeConnections } from "@/main";
 import WebSocket from "ws";
+import { activeConnections } from "@/config/websocketManager";
+
 export const sendToUser = <T>(
   userId: string,
   event: string,
   payload: T,
 ): boolean => {
   const ws = activeConnections.get(userId);
-  console.log("ws for activeConnections", ws);
   console.log("readyState for connection", ws?.readyState);
   console.log("sending to userId", userId);
 
   console.log("WS LOOKUP:", {
     requestedUserId: userId,
+    theWebsocket: ws,
     connections: [...activeConnections.keys()],
   });
 
@@ -25,6 +26,6 @@ export const sendToUser = <T>(
       payload,
     }),
   );
-
+  console.log(`[WS Sent] Event: ${event} to User: ${userId}`);
   return true;
 };

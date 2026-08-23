@@ -68,7 +68,6 @@ export const verifyEmail = asyncHandler(async (req, res) => {
     token,
     email,
   });
-  console.log("Returing user object after verification", user);
   return res.status(200).json({
     message,
     user,

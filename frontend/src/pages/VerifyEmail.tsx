@@ -51,7 +51,6 @@ export default function VerifyEmail() {
         setMessage(res.message || "Your email has been successfully verified!");
 
         updateUserData(res.user);
-        console.log("after verification, the user", res.user);
         setTimeout(() => {
           navigate("/onboarding", { replace: true });
         }, 1500);

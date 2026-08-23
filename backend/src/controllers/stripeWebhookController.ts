@@ -12,7 +12,6 @@ export const handleStripeWebhook = asyncHandler(async (req, res) => {
     req.body as Buffer,
     signature as string,
   );
-  console.log(event);
 
   await WebhookService.processWebhookEvent(event);
 

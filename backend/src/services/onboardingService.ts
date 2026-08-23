@@ -29,6 +29,5 @@ export const completeOnboarding = async (
   if (!updatedUser) {
     throw new AppError(500, "Failed to update onboarding details.");
   }
-  console.log("the updatedOne", updatedUser);
   return updatedUser;
 };

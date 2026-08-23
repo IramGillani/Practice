@@ -20,7 +20,7 @@ export const verifyStripeSignature = (
 export const processWebhookEvent = async (
   event: Stripe.Event,
 ): Promise<void> => {
-  console.log("➡️ Received Stripe Event Type:", event.type);
+  // console.log("➡️ Received Stripe Event Type:", event.type);
 
   switch (event.type) {
     case "checkout.session.completed": {
@@ -60,7 +60,6 @@ export const processWebhookEvent = async (
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (!session.subscription || !session.customer) return;
-
   const userId = session.metadata?.userId;
   const planId = session.metadata?.planId;
 
@@ -74,7 +73,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   const user = await UserRepo.findById(userId);
-  if (!user) return;
+  if (!user) {
+    console.log("User does not exit");
+    return;
+  }
 
   const stripeSubscriptionId =
     typeof session.subscription === "string"
@@ -85,9 +87,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     typeof session.subscription === "string"
       ? await stripe.subscriptions.retrieve(stripeSubscriptionId)
       : session.subscription;
-  console.log("Stripe session", session);
-  console.log("Stripe subscription object", stripeSub);
-  // user.stripeCustomerId = session.customer as string;
+
+  user.stripeCustomerId = session.customer as string;
   user.stripeSubscriptionId = stripeSubscriptionId;
 
   if (stripeSub.status === "trialing" && !user.hasUsedTrial) {
@@ -108,8 +109,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   });
 
   await user.save();
-  console.log("updated user at chekout completed", user);
-  sendToUser(userId.toString(), "CHECKOUT_COMPLETED", user);
+
+  const updatedUser = await UserRepo.findById(user._id);
+
+  sendToUser(user._id.toString(), "CHECKOUT_COMPLETED", updatedUser);
 }
 
 async function handleSubscriptionUpdated(stripeSub: Stripe.Subscription) {
@@ -131,6 +134,10 @@ async function handleSubscriptionUpdated(stripeSub: Stripe.Subscription) {
       ? new Date(stripeSub.trial_end * 1000)
       : undefined,
   });
+  await user.save();
+
+  const updatedUser = await UserRepo.findById(user._id.toString());
+  sendToUser(user._id.toString(), "SUBSCRIPTION_UPDATED", updatedUser);
 }
 
 async function handleSubscriptionCanceled(stripeSub: Stripe.Subscription) {
@@ -153,9 +160,6 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
       ? invoice.parent.subscription_details.subscription
       : invoice.parent?.subscription_details?.subscription?.id;
 
-  console.log("Invoice_p", invoice);
-  console.log("SubscriptionId", subscriptionId);
-
   if (!subscriptionId) return;
 
   const stripeCustomerId =
@@ -170,7 +174,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 
   const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
   user.stripeSubscriptionId = subscriptionId;
-  console.log("Stripe payment subscription object", stripeSub);
+  user.stripeCustomerId = stripeCustomerId;
 
   const priceId = stripeSub.items.data[0]?.price.id;
   const plan = await planRepo.findPlanByStripePriceId(priceId);
@@ -190,9 +194,10 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
       : undefined,
     expiresAt: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : undefined,
   });
-  console.log("updated user at invoice payment succeeded", user);
-  await user.save();
-  sendToUser(user._id.toString(), "PAYMENT_SUCCESS", user);
+
+  const updatedUser = await UserRepo.findById(user._id);
+
+  sendToUser(user._id.toString(), "CHECKOUT_COMPLETED", updatedUser);
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
@@ -210,12 +215,6 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
 
   await SubscriptionRepo.updateSubscriptionByUserId(user._id, {
-    status: stripeSub.status,
-  });
-
-  sendToUser(user._id.toString(), "PAYMENT_FAILED", {
-    invoiceId: invoice.id,
-    subscriptionId,
     status: stripeSub.status,
   });
 }

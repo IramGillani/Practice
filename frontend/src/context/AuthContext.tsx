@@ -117,6 +117,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(AUTH_KEYS.USER, JSON.stringify(updatedUser));
   };
 
+  useEffect(() => {
+    const userId = user?._id;
+    if (!userId) {
+      console.log("WebSocket skipped: user._id is not available yet", user);
+      return;
+    }
+
+    const wsUrl = `${import.meta.env.VITE_WS_URL}?userId=${userId}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log("WebSocket connected:", wsUrl);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        console.log("the received event", event);
+        const data = JSON.parse(event.data);
+        console.log("The received data", data);
+        if (
+          (data.event === "USER_SYNC" ||
+            data.event === "CHECKOUT_COMPLETED" ||
+            data.event === "PAYMENT_SUCCESS" ||
+            data.event === "SUBSCRIPTION_UPDATED") &&
+          data.payload
+        ) {
+          updateUserData(data.payload);
+        }
+      } catch (err) {
+        console.error(
+          "Failed to parse WebSocket message in AuthProvider:",
+          err,
+        );
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.error("WebSocket error:", err);
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket disconnected.");
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.CONNECTING) {
+        ws.onopen = () => ws.close();
+      } else if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, [user?._id]);
+
   return (
     <AuthContext.Provider
       value={{

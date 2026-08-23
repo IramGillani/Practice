@@ -30,7 +30,6 @@ export const signup = async (name: string, email: string, password: string) => {
     isVerified: false,
     stripeCustomerId: stripeCustomer.id,
   });
-  console.log("customerId", stripeCustomer.id);
 
   const rawToken = cryptoUtil.generateRandomToken();
   const hashedToken = cryptoUtil.hashToken(rawToken);
@@ -47,7 +46,6 @@ export const signup = async (name: string, email: string, password: string) => {
     route: "verify-email",
     type: EmailType.EMAIL_VERIFICATION,
   });
-  console.log("user on signup before selecting fields", user);
 
   return user;
 };
@@ -269,7 +267,6 @@ export const verifyEmail = async ({ token, email }: VerifyEmailProps) => {
   await user.save();
 
   await authTokensRepo.deleteAuthTokens(user._id, EmailType.EMAIL_VERIFICATION);
-  console.log("user after vefication on backend", user);
   return { message: "Email verified successfully", user };
 };
 
@@ -335,5 +332,3 @@ export const refreshAccessToken = async (token: string) => {
 
   return accessToken;
 };
-
-

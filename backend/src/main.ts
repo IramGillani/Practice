@@ -1,5 +1,5 @@
 import dns from "node:dns";
-import { sendToUser } from "@/utils/activeConnection";
+
 // Added to fix MongoDB Atlas SRV resolution failures in some network environments.
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
@@ -8,8 +8,8 @@ import http from "node:http";
 import express, { Application } from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import { WebSocketServer, WebSocket } from "ws";
-import * as UserRepo from "@/repositories/userRepo";
+import WebSocket, { WebSocketServer } from "ws";
+import { activeConnections } from "./config/websocketManager";
 
 import { connectDB } from "./config/db";
 import todoRoutes from "./routes/todoRoutes";
@@ -20,6 +20,7 @@ import planRoutes from "./routes/planRoutes";
 import onboardingRoutes from "./routes/onboardingRoutes";
 import webhookRoutes from "./routes/webhookRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
+import * as UserRepo from "@/repositories/userRepo";
 
 const app: Application = express();
 
@@ -54,14 +55,13 @@ const server = http.createServer(app);
 
 const wss = new WebSocketServer({ server });
 
-export const activeConnections = new Map<string, WebSocket>();
-
 wss.on("connection", async (ws, req) => {
   const urlParams = new URLSearchParams(req.url?.split("?")[1] || "");
   const userId = urlParams.get("userId");
 
   if (!userId) {
     ws.close(1008, "userId query parameter required");
+    console.log("There is no userId");
     return;
   }
 
@@ -72,27 +72,19 @@ wss.on("connection", async (ws, req) => {
     connections: [...activeConnections.keys()],
   });
 
-  const user = await UserRepo.findById(userId);
-  if (user) {
-    // ws.send(
-    //   JSON.stringify({
-    //     event: "CHECKOUT_COMPLETED",
-    //     payload: user,
-    //   }),
-    // );
-    sendToUser(user._id.toString(), "CHECKOUT_COMPLETED", user);
+  const currentUser = await UserRepo.findById(userId);
+  if (currentUser && ws.readyState === WebSocket.OPEN) {
+    ws.send(
+      JSON.stringify({
+        event: "USER_SYNC",
+        payload: currentUser,
+      }),
+    );
   }
 
   ws.on("message", (message) => {
     console.log(`Received: ${message}`);
   });
-
-  ws.send(
-    JSON.stringify({
-      type: "WELCOME",
-      message: "Connected to WebSocket server!",
-    }),
-  );
 
   ws.on("close", () => {
     activeConnections.delete(userId);
