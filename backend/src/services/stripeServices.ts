@@ -47,4 +47,36 @@ export const StripeService = {
 
     return session.url;
   },
+
+  async updateSubscriptionPlan({
+    subscriptionId,
+    newPriceId,
+  }: {
+    subscriptionId: string;
+    newPriceId: string;
+  }) {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    if (!subscription || subscription.items.data.length === 0) {
+      throw new AppError(
+        404,
+        "Active subscription not found on payment processor.",
+      );
+    }
+
+    const currentSubscriptionItemId = subscription.items.data[0].id;
+    const updatedSubscription = await stripe.subscriptions.update(
+      subscriptionId,
+      {
+        items: [
+          {
+            id: currentSubscriptionItemId,
+            price: newPriceId,
+          },
+        ],
+        proration_behavior: "always_invoice",
+        payment_behavior: "error_if_incomplete",
+      },
+    );
+    return updatedSubscription;
+  },
 };

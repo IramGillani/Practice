@@ -102,10 +102,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     trialEndsAt: stripeSub.trial_end
       ? new Date(stripeSub.trial_end * 1000)
       : undefined,
-    // startedAt: stripeSub.start_date
-    //   ? new Date(stripeSub.start_date * 1000)
-    //   : undefined,
-    // expiresAt: new Date(stripeSub.current_period_end * 1000),
   });
 
   await user.save();
@@ -119,24 +115,27 @@ async function handleSubscriptionUpdated(stripeSub: Stripe.Subscription) {
   const stripeCustomerId = stripeSub.customer as string;
   const priceId = stripeSub.items.data[0]?.price.id;
 
-  const user = await User.findOne({ stripeCustomerId });
+  const user = await UserRepo.findUserByStripeCustomerId(stripeCustomerId);
   if (!user) {
     console.warn(`User not found for customerId: ${stripeCustomerId}`);
     return;
   }
 
   const plan = await planRepo.findPlanByStripePriceId(priceId);
+  const currentPeriodEnd = stripeSub.items.data[0]?.current_period_end;
 
   await SubscriptionRepo.updateSubscriptionByUserId(user._id, {
     status: stripeSub.status,
     ...(plan && { planId: plan.planId }),
     trialEndsAt: stripeSub.trial_end
       ? new Date(stripeSub.trial_end * 1000)
-      : undefined,
+      : null,
+    expiresAt: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : null,
   });
+
   await user.save();
 
-  const updatedUser = await UserRepo.findById(user._id.toString());
+  const updatedUser = await UserRepo.findById(user._id);
   sendToUser(user._id.toString(), "SUBSCRIPTION_UPDATED", updatedUser);
 }
 
@@ -186,9 +185,9 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     userId: user._id,
     planId: plan.planId,
     status: stripeSub.status,
-    trialEndsAt: stripeSub.trial_end
-      ? new Date(stripeSub.trial_end * 1000)
-      : undefined,
+    // trialEndsAt: stripeSub.trial_end
+    //   ? new Date(stripeSub.trial_end * 1000)
+    //   : undefined,
     startedAt: stripeSub.start_date
       ? new Date(stripeSub.start_date * 1000)
       : undefined,
@@ -217,4 +216,8 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   await SubscriptionRepo.updateSubscriptionByUserId(user._id, {
     status: stripeSub.status,
   });
+  // await user.save();
+  const updatedUser = await UserRepo.findById(user._id);
+
+  sendToUser(user._id.toString(), "CHECKOUT_COMPLETED", updatedUser);
 }

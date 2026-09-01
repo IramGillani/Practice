@@ -23,3 +23,14 @@ export const getRedirectUrl = asyncHandler(
     res.status(200).json(result);
   },
 );
+
+export const upgradePlan = asyncHandler(
+  async (req: Request<{}, {}, PlanSelectionPayload>, res): Promise<void> => {
+    const { planId } = req.body;
+    const userId = req.user?._id;
+
+    const result = await PlanService.updatePlan(userId, planId);
+
+    res.status(200).json(result);
+  },
+);

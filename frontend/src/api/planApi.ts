@@ -16,4 +16,12 @@ export const planService = {
       method: "POST",
       data: payload,
     }),
+  upgradePlan: (payload?: PlanSelectionPayload) =>
+    apiRequest<{ success: boolean; message: string }>(
+      `${BASE_PATH}/upgradePlan`,
+      {
+        method: "POST",
+        data: payload,
+      },
+    ),
 };

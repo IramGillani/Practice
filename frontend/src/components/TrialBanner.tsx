@@ -1,17 +1,13 @@
-import { useNavigate } from "react-router-dom";
 import { AlertTriangle, Clock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const TrialBanner = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   if (user?.subscription?.status !== "trialing") return null;
 
   const trialEndsAt = user.subscription.trialEndsAt;
-  console.log("trialendsat", trialEndsAt);
   if (!trialEndsAt) return null;
 
   const endDate = new Date(trialEndsAt);
@@ -24,7 +20,7 @@ const TrialBanner = () => {
   return (
     <div
       className={cn(
-        "w-full rounded-lg border p-3.5 mb-4 flex items-center justify-between gap-3 text-sm transition-colors mt-4",
+        "w-full rounded-lg border p-3.5 mb-4 flex items-center gap-3 text-sm transition-colors mt-4",
         warning
           ? "bg-destructive/10 border-destructive/20 text-destructive dark:text-red-400"
           : "bg-muted/50 border-border text-foreground",
@@ -49,19 +45,11 @@ const TrialBanner = () => {
               warning ? "text-destructive/80" : "text-muted-foreground",
             )}
           >
-            Upgrade now to retain full access to premium features.
+            You currently have full access to all features during your trial
+            period.
           </p>
         </div>
       </div>
-
-      <Button
-        size="sm"
-        variant={warning ? "destructive" : "default"}
-        onClick={() => navigate("/plans")}
-        className="shrink-0 font-medium h-8 px-3 cursor-pointer"
-      >
-        Upgrade
-      </Button>
     </div>
   );
 };

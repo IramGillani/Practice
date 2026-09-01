@@ -28,9 +28,9 @@ export const upsertStripeSubscription = async (data: {
   userId: string;
   planId: string;
   status: string;
-  trialEndsAt?: Date;
-  startedAt?: Date;
-  expiresAt?: Date;
+  trialEndsAt?: Date | null;
+  startedAt?: Date | null;
+  expiresAt?: Date | null;
 }) => {
   return Subscription.findOneAndUpdate(
     { userId: data.userId },
@@ -50,7 +50,13 @@ export const upsertStripeSubscription = async (data: {
 
 export const updateSubscriptionByUserId = async (
   userId: string,
-  updateData: Partial<{ status: string; planId: string; trialEndsAt?: Date }>,
+  updateData: Partial<{
+    status: string;
+    planId: string;
+    trialEndsAt?: Date | null;
+    expiresAt?: Date | null;
+    startedAt?: Date | null;
+  }>,
 ): Promise<ISubscription | null> => {
   return Subscription.findOneAndUpdate(
     { userId },

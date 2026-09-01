@@ -1,7 +1,14 @@
-import { User, Settings, LogOut, Moon, Sun } from "lucide-react";
-import { Loader2 } from "lucide-react";
-import { LayoutDashboard } from "lucide-react";
-import { Link } from "react-router-dom";
+import {
+  User,
+  Settings,
+  LogOut,
+  Moon,
+  Sun,
+  LayoutDashboard,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 import {
   DropdownMenu,
@@ -15,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
-import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const { logout, user, isLoading } = useAuth();
@@ -30,7 +36,7 @@ const Navbar = () => {
       <div className="flex gap-2 items-center">
         <Button
           onClick={toggleTheme}
-          className="cursor-pointer bg-gray-400 dark:bg-gray-200 "
+          className="cursor-pointer bg-gray-400 dark:bg-gray-200"
         >
           {theme === "dark" ? (
             <>
@@ -41,7 +47,8 @@ const Navbar = () => {
               <Moon size={16} />
             </>
           )}
-        </Button>{" "}
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -68,6 +75,18 @@ const Navbar = () => {
                 <span>Admin Dashboard</span>
               </DropdownMenuItem>
             )}
+
+            <DropdownMenuItem onClick={() => navigate("/plans")}>
+              <Sparkles
+                size={16}
+                className="mr-2 text-blue-600 dark:text-blue-400"
+              />
+              <span>
+                {user?.subscription?.planId === "enterprise"
+                  ? "Change Plan"
+                  : "Upgrade Plan"}
+              </span>
+            </DropdownMenuItem>
 
             <DropdownMenuItem onClick={() => navigate("/settings")}>
               <Settings size={16} className="mr-2" />

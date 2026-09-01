@@ -7,9 +7,9 @@ export interface ISubscription extends Document {
   planId: PlanId;
   plan: Types.ObjectId;
   status: SubscriptionStatus;
-  startedAt?: Date;
+  startedAt?: Date | null;
   expiresAt?: Date | null;
-  trialEndsAt?: Date;
+  trialEndsAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

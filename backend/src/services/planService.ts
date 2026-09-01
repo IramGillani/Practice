@@ -7,6 +7,7 @@ import { AppError } from "../utils/customErrorHandler";
 import { PlanSelectionResponse } from "@/types/Plan";
 import { SubscriptionStatus } from "@/types/Subscription";
 import { getRecommendedPlanId } from "@/utils/planMapper";
+import { IUser } from "@/types";
 
 export const getAvailablePlans = async (
   userId: string,
@@ -94,5 +95,40 @@ export const getUrl = async (
 
   return {
     redirectUrl: checkoutUrl,
+  };
+};
+
+export const updatePlan = async (
+  userId: string,
+  planId: PlanId,
+): Promise<{ success: boolean; message: string }> => {
+  if (!userId) {
+    throw new AppError(401, "Unauthorized. User session not found.");
+  }
+
+  const user = await UserRepo.findById(userId);
+  if (!user || !user.stripeCustomerId || !user.stripeSubscriptionId) {
+    throw new AppError(
+      400,
+      "No active subscription profile found for this user.",
+    );
+  }
+
+  const targetPlan = await PlanRepo.findByPlanId(planId);
+  if (!targetPlan || !targetPlan.stripePriceId) {
+    throw new AppError(
+      400,
+      `Invalid plan selection or missing price ID: ${planId}`,
+    );
+  }
+
+  const updatedSubscription = await StripeService.updateSubscriptionPlan({
+    subscriptionId: user.stripeSubscriptionId,
+    newPriceId: targetPlan.stripePriceId,
+  });
+
+  return {
+    success: true,
+    message: "Subscription being updating",
   };
 };
