@@ -79,4 +79,62 @@ export const StripeService = {
     );
     return updatedSubscription;
   },
+
+  async scheduleDowngrade({
+    subscriptionId,
+    newPriceId,
+  }: {
+    subscriptionId: string;
+    newPriceId: string;
+  }) {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    if (!subscription || subscription.items.data.length === 0) {
+      throw new AppError(
+        404,
+        "Active subscription not found on payment processor.",
+      );
+    }
+
+    const subscriptionItemId = subscription.items.data[0].id;
+    const currentPriceId = subscription.items.data[0].price.id;
+    const currentPeriodEnd = subscription.items.data[0].current_period_end;
+
+    let schedule: Stripe.SubscriptionSchedule;
+
+    if (!subscription.schedule) {
+      schedule = await stripe.subscriptionSchedules.create({
+        from_subscription: subscriptionId,
+      });
+      console.log("created schedule", schedule);
+    } else {
+      schedule = await stripe.subscriptionSchedules.retrieve(
+        subscription.schedule as string,
+      );
+      console.log("retrieved schedule", schedule);
+    }
+
+    const updatedSchedule = await stripe.subscriptionSchedules.update(
+      schedule.id,
+      {
+        end_behavior: "release",
+        phases: [
+          {
+            items: [{ price: currentPriceId, quantity: 1 }],
+            start_date: schedule.phases[0].start_date,
+            end_date: currentPeriodEnd,
+          },
+          {
+            items: [{ price: newPriceId, quantity: 1 }],
+            start_date: currentPeriodEnd,
+          },
+        ],
+      },
+    );
+    console.log("updated schedule", updatedSchedule);
+    return {
+      scheduledFor: new Date(currentPeriodEnd * 1000),
+      schedule: updatedSchedule,
+      message: `Downgrade scheduled successfully. The new plan will take effect after the current billing period ends on ${new Date(currentPeriodEnd * 1000).toLocaleString()}.`,
+    };
+  },
 };

@@ -10,6 +10,7 @@ export interface ISubscription extends Document {
   startedAt?: Date | null;
   expiresAt?: Date | null;
   trialEndsAt?: Date | null;
+  pendingPlanId?: PlanId | null;
   createdAt: Date;
   updatedAt: Date;
 }

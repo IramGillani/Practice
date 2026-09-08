@@ -65,10 +65,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (!userId || !planId) {
     console.warn("Missing metadata in checkout session:", session.id);
-    //  throw new AppError(
-    //   400,
-    //   `Missing required checkout metadata (userId: ${userId ?? "null"}, planId: ${planId ?? "null"})`
-    // );
     return;
   }
 
@@ -101,7 +97,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     status: stripeSub.status,
     trialEndsAt: stripeSub.trial_end
       ? new Date(stripeSub.trial_end * 1000)
-      : undefined,
+      : null,
   });
 
   await user.save();
@@ -112,6 +108,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 async function handleSubscriptionUpdated(stripeSub: Stripe.Subscription) {
+  console.log("the updated stripe subscription", stripeSub);
   const stripeCustomerId = stripeSub.customer as string;
   const priceId = stripeSub.items.data[0]?.price.id;
 
@@ -126,9 +123,13 @@ async function handleSubscriptionUpdated(stripeSub: Stripe.Subscription) {
 
   await SubscriptionRepo.updateSubscriptionByUserId(user._id, {
     status: stripeSub.status,
-    ...(plan && { planId: plan.planId }),
-    trialEndsAt: stripeSub.trial_end
-      ? new Date(stripeSub.trial_end * 1000)
+    ...(plan && { planId: plan.planId, pendingPlanId: null }),
+    trialEndsAt:
+      stripeSub.status === "trialing" && stripeSub.trial_end
+        ? new Date(stripeSub.trial_end * 1000)
+        : null,
+    startedAt: stripeSub.start_date
+      ? new Date(stripeSub.start_date * 1000)
       : null,
     expiresAt: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : null,
   });
@@ -185,9 +186,10 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     userId: user._id,
     planId: plan.planId,
     status: stripeSub.status,
-    // trialEndsAt: stripeSub.trial_end
-    //   ? new Date(stripeSub.trial_end * 1000)
-    //   : undefined,
+    trialEndsAt:
+      stripeSub.status === "trialing" && stripeSub.trial_end
+        ? new Date(stripeSub.trial_end * 1000)
+        : null,
     startedAt: stripeSub.start_date
       ? new Date(stripeSub.start_date * 1000)
       : undefined,

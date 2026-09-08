@@ -64,31 +64,75 @@ export default function PricingPlans() {
     }
   }, [user?.subscription?.planId, processingId, navigate]);
 
+  const getPlanAction = (plan: Plan) => {
+    if (!currentPlan) {
+      return "Select Plan";
+    }
+
+    if (plan.rank > currentPlan.rank) {
+      return "Upgrade";
+    }
+
+    if (plan.rank < currentPlan.rank) {
+      return "Subscribe";
+    }
+
+    return "Current Plan";
+  };
+
   const handleSelectPlan = async (planId: PlanId) => {
     try {
       setProcessingId(planId);
 
-      if (hasActiveSubscription) {
-        const res = await planService.upgradePlan({ planId });
+      if (!currentPlanId) {
+        console.log("Selecting plan initially");
+        const res: PlanSelectionResponse = await planService.selectPlan({
+          planId,
+        });
 
-        console.log("Plan updated successfully:", res);
+        if (res.user) {
+          updateUserData(res.user);
+        }
+
+        if (res.redirectUrl) {
+          window.location.href = res.redirectUrl;
+        }
 
         return;
       }
 
-      const res: PlanSelectionResponse = await planService.selectPlan({
-        planId,
-      });
+      const selectedPlan = plans.find((plan) => plan.planId === planId);
 
-      if (res.user) {
-        updateUserData(res.user);
+      if (!currentPlan || !selectedPlan) {
+        throw new Error("Plan not found");
       }
 
-      if (res.redirectUrl) {
-        window.location.href = res.redirectUrl;
+      if (currentPlan.planId === selectedPlan.planId) {
+        console.log("Same plan selected");
+        return;
+      }
+
+      const isUpgrade = selectedPlan.rank > currentPlan.rank;
+
+      if (isUpgrade) {
+        console.log("Upgrading");
+        const res = await planService.upgradePlan({
+          planId: selectedPlan.planId,
+        });
+
+        console.log("Upgrade successful:", res);
+        return;
+      } else {
+        console.log("Downgrading");
+        const res = await planService.downgradePlan({
+          planId: selectedPlan.planId,
+        });
+
+        console.log("Downgrade successful:", res);
+        return;
       }
     } catch (err) {
-      console.error("Error updating/selecting plan:", err);
+      console.error("Error changing plan:", err);
     } finally {
       setProcessingId(null);
     }
@@ -155,6 +199,7 @@ export default function PricingPlans() {
           const isSelected = selectedPlanId === plan.planId;
           const isProcessing = processingId === plan.planId;
           const isRecommended = Boolean(plan.isRecommended);
+          const planAction = getPlanAction(plan);
 
           return (
             <Card
@@ -230,8 +275,11 @@ export default function PricingPlans() {
                     "Current Plan"
                   ) : hasActiveSubscription ? (
                     <>
-                      <Zap className="mr-1.5 h-4 w-4 fill-current" />
-                      Upgrade
+                      {planAction === "Upgrade" ? (
+                        <Zap className="mr-1.5 h-4 w-4 fill-current" />
+                      ) : null}
+
+                      {planAction}
                     </>
                   ) : (
                     "Select Plan"

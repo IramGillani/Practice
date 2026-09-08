@@ -140,9 +140,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           (data.event === "USER_SYNC" ||
             data.event === "CHECKOUT_COMPLETED" ||
             data.event === "PAYMENT_SUCCESS" ||
+            data.event === "SUBSCRIPTION_SCHEDULED" ||
             data.event === "SUBSCRIPTION_UPDATED") &&
           data.payload
         ) {
+          console.log("Updated user", data.payload);
           updateUserData(data.payload);
         }
       } catch (err) {

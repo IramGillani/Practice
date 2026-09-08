@@ -7,7 +7,7 @@ import { AppError } from "../utils/customErrorHandler";
 import { PlanSelectionResponse } from "@/types/Plan";
 import { SubscriptionStatus } from "@/types/Subscription";
 import { getRecommendedPlanId } from "@/utils/planMapper";
-import { IUser } from "@/types";
+import { sendToUser } from "@/utils/activeConnection";
 
 export const getAvailablePlans = async (
   userId: string,
@@ -130,5 +130,48 @@ export const updatePlan = async (
   return {
     success: true,
     message: "Subscription being updating",
+  };
+};
+
+export const downgradePlan = async (
+  userId: string,
+  planId: PlanId,
+): Promise<{ success: boolean; message: string }> => {
+  if (!userId) {
+    throw new AppError(401, "Unauthorized. User session not found.");
+  }
+
+  const user = await UserRepo.findById(userId);
+  if (!user || !user.stripeCustomerId || !user.stripeSubscriptionId) {
+    throw new AppError(
+      400,
+      "No active subscription profile found for this user.",
+    );
+  }
+
+  const targetPlan = await PlanRepo.findByPlanId(planId);
+  if (!targetPlan || !targetPlan.stripePriceId) {
+    throw new AppError(
+      400,
+      `Invalid plan selection or missing price ID: ${planId}`,
+    );
+  }
+
+  const result = await StripeService.scheduleDowngrade({
+    subscriptionId: user.stripeSubscriptionId,
+    newPriceId: targetPlan.stripePriceId,
+  });
+  console.log("Downgrade scheduled result:", result);
+  console.log("pending plan id", targetPlan.planId);
+  await SubscriptionRepo.updateSubscriptionByUserId(user._id, {
+    pendingPlanId: targetPlan.planId,
+  });
+  await user.save();
+  const updatedUser = await UserRepo.findById(user._id);
+  sendToUser(user._id.toString(), "SUBSCRIPTION_SCHEDULED", updatedUser);
+
+  return {
+    success: true,
+    message: result.message,
   };
 };

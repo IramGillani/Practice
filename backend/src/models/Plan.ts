@@ -20,6 +20,7 @@ const PlanSchema = new Schema<IPlan>(
     isRecommended: { type: Boolean, default: false },
     maxTeamSize: { type: Number, required: true },
     trialPeriodDays: { type: Number, default: 0 },
+    rank: { type: Number, index: true },
   },
   { timestamps: true },
 );

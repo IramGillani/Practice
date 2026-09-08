@@ -12,6 +12,7 @@ export interface IPlan extends Document {
   isRecommended: boolean;
   maxTeamSize: number;
   trialPeriodDays: number;
+  rank: number;
 }
 
 export interface IPlanData {
@@ -24,6 +25,7 @@ export interface IPlanData {
   isRecommended: boolean;
   maxTeamSize: number;
   trialPeriodDays: number;
+  rank: number;
 }
 
 // 2. Mongoose Document type (for un-lean Mongoose queries)

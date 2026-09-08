@@ -34,3 +34,14 @@ export const upgradePlan = asyncHandler(
     res.status(200).json(result);
   },
 );
+
+export const downgradePlan = asyncHandler(
+  async (req: Request<{}, {}, PlanSelectionPayload>, res): Promise<void> => {
+    const { planId } = req.body;
+    const userId = req.user?._id;
+
+    const result = await PlanService.downgradePlan(userId, planId);
+
+    res.status(200).json(result);
+  },
+);

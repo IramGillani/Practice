@@ -1,6 +1,7 @@
 import { Subscription } from "@/models/Subscription";
 import { SubscriptionStatus } from "@/types/Subscription";
 import { ISubscription } from "@/types/Subscription";
+import { PlanId } from "@/types/Plan";
 
 export const findSubscriptionByUserId = async (
   userId: string,
@@ -56,6 +57,7 @@ export const updateSubscriptionByUserId = async (
     trialEndsAt?: Date | null;
     expiresAt?: Date | null;
     startedAt?: Date | null;
+    pendingPlanId?: PlanId | null;
   }>,
 ): Promise<ISubscription | null> => {
   return Subscription.findOneAndUpdate(

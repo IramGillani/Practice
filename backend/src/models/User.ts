@@ -55,6 +55,7 @@ const userSchema = new Schema<IUser, {}, IUserMethods>(
                 trialEndsAt: ret.subscription.trialEndsAt || null,
                 expiresAt: ret.subscription.expiresAt || null,
                 startedAt: ret.subscription.startedAt || null,
+                pendingPlanId: ret.subscription.pendingPlanId || null,
               }
             : null,
         };

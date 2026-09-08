@@ -17,6 +17,7 @@ const INITIAL_PLANS = [
     isRecommended: false,
     maxTeamSize: 1,
     trialPeriodDays: 0,
+    rank: 0,
   },
   {
     planId: "individual",
@@ -28,6 +29,7 @@ const INITIAL_PLANS = [
     isRecommended: false,
     maxTeamSize: 1,
     trialPeriodDays: 0,
+    rank: 1,
   },
   {
     planId: "team",
@@ -45,6 +47,7 @@ const INITIAL_PLANS = [
     isRecommended: true,
     maxTeamSize: 10,
     trialPeriodDays: 3,
+    rank: 2,
   },
   {
     planId: "enterprise",
@@ -60,6 +63,7 @@ const INITIAL_PLANS = [
     isRecommended: false,
     maxTeamSize: 9999,
     trialPeriodDays: 0,
+    rank: 3,
   },
 ];
 

@@ -33,6 +33,7 @@ const SubscriptionSchema = new Schema<ISubscription>(
     },
     startedAt: { type: Date, default: null },
     expiresAt: { type: Date, default: null },
+    pendingPlanId: { type: String, default: null },
   },
 
   { timestamps: true },

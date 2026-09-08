@@ -24,4 +24,12 @@ export const planService = {
         data: payload,
       },
     ),
+  downgradePlan: (payload?: PlanSelectionPayload) =>
+    apiRequest<{ success: boolean; message: string }>(
+      `${BASE_PATH}/downgradePlan`,
+      {
+        method: "POST",
+        data: payload,
+      },
+    ),
 };

@@ -7,6 +7,7 @@ export interface Plan {
   price: string | number;
   features: string[];
   isRecommended?: boolean;
+  rank: number;
 }
 export type PlanId = "free" | "individual" | "team" | "enterprise";
 
